@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Johann Patiño — Java Developer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 78% 22%, rgba(255, 214, 165, 0.55), transparent 45%),
+        radial-gradient(circle at 18% 78%, rgba(180, 205, 255, 0.45), transparent 50%),
+        linear-gradient(135deg, #eef0f7 0%, #e7e9f3 40%, #f4ece2 100%);
+      background-attachment: fixed;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    section {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      padding: clamp(1.6rem, 7vw, 7rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* ── HERO ── */
+    .intro {
+      max-width: 620px; pointer-events: none;
+      margin-left: clamp(0rem, 6vw, 6rem);
+    }
+
+    .intro .kicker {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem; letter-spacing: 0.32em;
+      text-transform: uppercase; color: #7b8190;
+      margin-bottom: 1.1rem;
+      opacity: 0; animation: rise 0.8s ease forwards 0.2s;
+    }
+    .intro h1 {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: clamp(3.2rem, 9vw, 6.2rem); line-height: 0.98;
+      letter-spacing: -0.02em; color: #1b1d2a; margin-bottom: 1rem;
+      opacity: 0; animation: rise 0.8s ease forwards 0.35s;
+    }
+    .intro h2 {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+      font-size: clamp(1.3rem, 3vw, 2.05rem); color: #c98a2e;
+      margin-bottom: 1.4rem;
+      opacity: 0; animation: rise 0.8s ease forwards 0.5s;
+    }
+    .intro h2 .blink {
+      display: inline-block; width: 0.55em; height: 1.05em;
+      margin-left: 0.1em; vertical-align: text-bottom;
+      background: #c98a2e; animation: blink 1.1s steps(1) infinite;
+    }
+    .intro p {
+      font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;
+      line-height: 1.7; color: #5a6070; max-width: 32ch;
+      opacity: 0; animation: rise 0.8s ease forwards 0.65s;
+    }
+
+    .scrollcue {
+      position: absolute; bottom: 3vh; left: 50%; transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      letter-spacing: 0.25em; text-transform: uppercase; color: #8b909d;
+      animation: bob 1.8s ease-in-out infinite; pointer-events: none;
+    }
+
+    /* ── PROJECTS ── */
+    .projects {
+      max-width: 680px;
+      margin-left: clamp(0rem, 6vw, 6rem);
+    }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: clamp(2.4rem, 6vw, 3.6rem); color: #1b1d2a; margin-bottom: 0.4rem;
+    }
+    .section-title .brace { color: #c98a2e; }
+    .section-sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;
+      color: #7b8190; margin-bottom: 2.4rem; letter-spacing: 0.05em;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      padding: 1.5rem 1.7rem;
+      margin-bottom: 1.1rem;
+      box-shadow: 0 10px 30px -12px rgba(40, 50, 90, 0.22);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px -14px rgba(40, 50, 90, 0.30);
+    }
+    .card h3 {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: 1.45rem; color: #1b1d2a; margin-bottom: 0.4rem;
+    }
+    .card p {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.98rem;
+      line-height: 1.6; color: #5a6070; margin-bottom: 0.9rem;
+    }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+      color: #3b6fb5; background: rgba(59, 111, 181, 0.10);
+      border: 1px solid rgba(59, 111, 181, 0.20);
+      padding: 0.25rem 0.7rem; border-radius: 999px;
+    }
+
+    /* ── CV ── */
+    .cv { max-width: 760px; margin-left: clamp(0rem, 6vw, 6rem); }
+
+    .cv-card {
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 16px;
+      padding: 1.6rem 1.8rem;
+      box-shadow: 0 10px 30px -12px rgba(40,50,90,0.22);
+      overflow: hidden;
+    }
+
+    .cv-summary {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.88rem;
+      line-height: 1.7; color: #5a6070;
+      padding-bottom: 1.4rem;
+      border-bottom: 1px solid rgba(27,29,42,0.08);
+      margin-bottom: 1.4rem;
+    }
+    .cv-summary strong { color: #1b1d2a; font-weight: 600; }
+
+    .cv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6rem 2.4rem;
+    }
+    .cv-col { display: flex; flex-direction: column; gap: 1.4rem; min-width: 0; }
+
+    /* section labels — colour-coded badges */
+    .cv-block-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.70rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      display: inline-block; padding: 0.22rem 0.65rem;
+      border-radius: 6px; margin-bottom: 0.85rem;
+    }
+    .cv-block-title.edu {
+      color: #3b6fb5; background: rgba(59,111,181,0.10);
+      border: 1px solid rgba(59,111,181,0.22);
+    }
+    .cv-block-title.exp {
+      color: #b07520; background: rgba(201,138,46,0.10);
+      border: 1px solid rgba(201,138,46,0.26);
+    }
+    .cv-block-title.neutral {
+      color: #5a6070; background: rgba(90,96,112,0.07);
+      border: 1px solid rgba(90,96,112,0.16);
+    }
+
+    /* timeline */
+    .timeline { display: flex; flex-direction: column; }
+    .tl-item { display: flex; gap: 0.85rem; position: relative; }
+    .tl-item:not(:last-child)::before {
+      content: ''; position: absolute; left: 5px; top: 18px;
+      width: 1px; bottom: 0;
+    }
+    .tl-item.edu-item:not(:last-child)::before { background: rgba(59,111,181,0.28); }
+    .tl-item.exp-item:not(:last-child)::before { background: rgba(201,138,46,0.28); }
+
+    .tl-dot {
+      flex: 0 0 11px; width: 11px; height: 11px; border-radius: 50%;
+      margin-top: 4px; position: relative; z-index: 1;
+    }
+    .edu-item .tl-dot { background: #3b6fb5; }
+    .exp-item .tl-dot { background: #c98a2e; }
+
+    .tl-body { padding-bottom: 1.2rem; min-width: 0; }
+    .tl-role {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: 0.97rem; color: #1b1d2a; line-height: 1.2;
+    }
+    .tl-org {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
+      color: #7b8190; margin: 0.12rem 0 0.08rem;
+    }
+    .tl-date {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.70rem;
+      margin-bottom: 0.3rem;
+    }
+    .edu-item .tl-date { color: #3b6fb5; }
+    .exp-item .tl-date { color: #c98a2e; }
+
+    .tl-desc {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.80rem;
+      line-height: 1.55; color: #5a6070;
+    }
+
+    /* divider between cols */
+    .cv-col-divider {
+      width: 1px; background: rgba(27,29,42,0.07); border-radius: 1px;
+    }
+
+    /* skill pills */
+    .skill-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .skill-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.80rem;
+      padding: 0.28rem 0.7rem; border-radius: 999px;
+      border: 1px solid rgba(59,111,181,0.25);
+      background: rgba(59,111,181,0.08); color: #3b6fb5;
+    }
+    .skill-pill.lang {
+      border-color: rgba(201,138,46,0.30);
+      background: rgba(201,138,46,0.08); color: #b07520;
+    }
+
+    @media (max-width: 680px) {
+      .cv-grid { grid-template-columns: 1fr; }
+      .cv-col-divider { display: none; }
+    }
+
+    /* ── CONTACT (terminal) ── */
+    .contact { max-width: 680px; margin-left: clamp(0rem, 6vw, 6rem); }
+    .terminal {
+      max-width: 560px;
+      background: rgba(38, 10, 32, 0.95);   /* Git Bash aubergine */
+      border: 1px solid rgba(0, 255, 204, 0.16);
+      border-radius: 12px;
+      box-shadow: 0 26px 60px -22px rgba(20, 5, 25, 0.6),
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      backdrop-filter: blur(6px);
+    }
+    .term-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.4rem 0.45rem 0.4rem 0.8rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .term-title {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #cbb8c6;
+    }
+    .term-title .gb-ico {
+      width: 15px; height: 15px; border-radius: 3px;
+      background: linear-gradient(135deg, #e8542f, #f08a3c);
+    }
+    .win-controls { display: flex; }
+    .win-btn {
+      width: 30px; height: 22px; display: grid; place-items: center;
+      color: #cbb8c6; font-size: 0.72rem; border-radius: 3px;
+      transition: background .15s ease, color .15s ease;
+    }
+    .win-btn:hover { background: rgba(255, 255, 255, 0.10); }
+    .win-btn.close:hover { background: #e81123; color: #fff; }
+
+    .term-body { padding: 1.1rem 1.3rem 1.4rem; font-family: 'JetBrains Mono', monospace; }
+    .gb-prompt { font-size: 0.82rem; margin-top: 0.55rem; white-space: nowrap; }
+    .gb-prompt .u { color: #37c837; font-weight: 700; }   /* user@host  */
+    .gb-prompt .m { color: #c586c0; font-weight: 700; }   /* MINGW64    */
+    .gb-prompt .p { color: #d7ba7d; font-weight: 700; }   /* ~/path     */
+    .gb-cmd { color: #dcdcdc; font-size: 0.9rem; margin: 0.05rem 0 0.5rem; }
+    .gb-cmd .dollar { color: #dcdcdc; margin-right: 0.5rem; }
+    .term-out { color: #9a8fa0; font-size: 0.85rem; margin: 0 0 0.3rem; }
+
+    .contact-row {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 0.65rem 0.8rem; margin: 0.4rem 0;
+      border-radius: 10px; border: 1px solid transparent;
+      text-decoration: none; color: #e7edf5;
+      transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .contact-row:hover {
+      background: rgba(0, 255, 204, 0.06);
+      border-color: rgba(0, 255, 204, 0.30);
+      transform: translateX(6px);
+    }
+    .contact-row .ic {
+      flex: 0 0 36px; width: 36px; height: 36px;
+      display: grid; place-items: center; border-radius: 9px;
+      background: rgba(0, 255, 204, 0.10); color: #00ffcc;
+      transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+    .contact-row:hover .ic {
+      background: #00ffcc; color: #0d1017;
+      box-shadow: 0 0 18px rgba(0, 255, 204, 0.45);
+    }
+    .contact-row .ic svg { width: 19px; height: 19px; }
+    .contact-meta { display: flex; flex-direction: column; line-height: 1.25; }
+    .contact-meta .lbl {
+      font-size: 0.68rem; color: #6e7891;
+      text-transform: uppercase; letter-spacing: 0.14em;
+    }
+    .contact-meta .val { font-size: 0.92rem; color: #e7edf5; }
+    .contact-row .arrow { margin-left: auto; color: #4a5468; transition: color .2s ease, transform .2s ease; }
+    .contact-row:hover .arrow { color: #00ffcc; transform: translateX(4px); }
+    .blink2 {
+      display: inline-block; width: 0.5em; height: 1.0em; vertical-align: text-bottom;
+      background: #dcdcdc; animation: blink 1.1s steps(1) infinite;
+    }
+
+    /* ── LANG BUTTON ── */
+    .lang-btn {
+      position: fixed; top: 1.2rem; right: 3.5rem; z-index: 100;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.92rem;
+      letter-spacing: 0.12em; padding: 0.5rem 1.2rem;
+      border-radius: 999px; border: 1px solid rgba(27,29,42,0.18);
+      background: rgba(255,255,255,0.75); backdrop-filter: blur(8px);
+      color: #1b1d2a; cursor: pointer;
+      box-shadow: 0 2px 12px -4px rgba(40,50,90,0.18);
+      transition: background .2s, border-color .2s, color .2s, transform .15s;
+    }
+    .lang-btn:hover {
+      background: rgba(255,255,255,0.96); border-color: #c98a2e;
+      color: #c98a2e; transform: translateY(-1px);
+    }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    @keyframes bob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+    @media (max-width: 760px) {
+      section { padding-top: 12vh; justify-content: flex-end; padding-bottom: 8vh; }
+      .intro { text-align: center; }
+      .intro p { margin: 0 auto; }
+      .terminal { max-width: 100%; }
+      .contact-meta .val { font-size: 0.8rem; word-break: break-all; }
+      .gb-prompt { white-space: normal; font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+  <button class="lang-btn" id="langBtn" onclick="toggleLang()">DE</button>
+
+  <section class="hero">
+    <div class="intro">
+      <div class="kicker" data-i18n="hero.kicker">Hello, I'm</div>
+      <h1>Johann<br>Patiño</h1>
+      <h2>{Java Developer}<span class="blink"></span></h2>
+      <p data-i18n="hero.desc">Backend &amp; full-stack — Spring Boot, SQL, Docker. Based in Vienna, Austria.</p>
+    </div>
+    <div class="scrollcue" data-i18n="hero.scroll">scroll ↓</div>
+  </section>
+
+  <section class="projects">
+    <h2 class="section-title"><span class="brace">{</span> <span data-i18n="projects.title">Projects</span> <span class="brace">}</span></h2>
+    <div class="section-sub" data-i18n="projects.sub">// a few things I've built</div>
+
+    <div class="card"><a href="http://mixturalatina.at" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+      <h3>MixturaLatina</h3>
+      <p data-i18n="proj1.desc">Designed and built the frontend for a Vienna-based business — responsive layout, mobile-first, deployed and maintained.</p>
+      <div class="tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span></div>
+    </a></div>
+
+    <div class="card">
+      <h3>8-Bit Portfolio</h3>
+      <p data-i18n="proj2.desc">This interactive CV — a voxel character rendered in WebGL that reacts to scroll and changes outfits.</p>
+      <div class="tags"><span class="tag">Three.js</span><span class="tag">WebGL</span><span class="tag">JavaScript</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Spring Boot REST API</h3>
+      <p data-i18n="proj3.desc">A backend service with layered architecture, JPA persistence and containerized deployment.</p>
+      <div class="tags"><span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">SQL</span><span class="tag">Docker</span></div>
+    </div>
+  </section>
+
+  <section class="cv">
+    <h2 class="section-title"><span class="brace">{</span> <span data-i18n="cv.title">About Me</span> <span class="brace">}</span></h2>
+    <div class="section-sub" data-i18n="cv.sub">// background &amp; experience</div>
+
+    <div class="cv-card">
+
+      <!-- Summary -->
+      <p class="cv-summary" data-i18n="cv.summary"><strong>Software Developer</strong> focused on Java backend and web development. Currently training at <strong>everyonecodes Wien</strong>, with a completed full-stack bootcamp and real-world project experience — including a live client website. Motivated to grow continuously in software engineering.</p>
+
+      <div class="cv-grid">
+
+        <!-- LEFT: Education + Languages + Skills -->
+        <div class="cv-col">
+          <div>
+            <div class="cv-block-title edu" data-i18n="cv.edu">// education</div>
+            <div class="timeline">
+              <div class="tl-item edu-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role">Software Development Programme</div>
+                  <div class="tl-org">everyonecodes gGmbH · Wien</div>
+                  <div class="tl-date" data-i18n="edu1.date">12/2025 — present</div>
+                  <div class="tl-desc" data-i18n="edu1.desc">Java, OOP, Spring Boot, Spring Data, Spring Security, SQL, Docker</div>
+                </div>
+              </div>
+              <div class="tl-item edu-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role">The Web Developer Bootcamp</div>
+                  <div class="tl-org">Udemy</div>
+                  <div class="tl-date">2025</div>
+                  <div class="tl-desc" data-i18n="edu2.desc">HTML5, CSS3, JS ES6+, React, Node.js, Express, MongoDB, REST APIs</div>
+                </div>
+              </div>
+              <div class="tl-item edu-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role" data-i18n="edu3.role">Economía Empresarial</div>
+                  <div class="tl-org">Universidad Metropolitana · Caracas</div>
+                  <div class="tl-date" data-i18n="edu3.date">2011 — 2014 (incomplete)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="cv-block-title neutral" data-i18n="cv.lang">// languages</div>
+            <div class="skill-grid">
+              <span class="skill-pill lang" data-i18n="lang.es">Spanish — native</span>
+              <span class="skill-pill lang" data-i18n="lang.de">German — B2</span>
+              <span class="skill-pill lang" data-i18n="lang.en">English — C1</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="cv-block-title neutral" data-i18n="cv.skills">// technical skills</div>
+            <div class="skill-grid">
+              <span class="skill-pill">Java</span>
+              <span class="skill-pill">Spring Boot</span>
+              <span class="skill-pill">JavaScript</span>
+              <span class="skill-pill">HTML5 &amp; CSS3</span>
+              <span class="skill-pill">SQL &amp; MySQL</span>
+              <span class="skill-pill">MongoDB</span>
+              <span class="skill-pill">Git</span>
+              <span class="skill-pill">Docker</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Experience -->
+        <div class="cv-col">
+          <div>
+            <div class="cv-block-title exp" data-i18n="cv.exp">// experience</div>
+            <div class="timeline">
+              <div class="tl-item exp-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role" data-i18n="exp1.role">Webdesign &amp; Implementation</div>
+                  <div class="tl-org">MixturaLatina e.U · Wien</div>
+                  <div class="tl-date">07/2025 — 09/2025</div>
+                  <div class="tl-desc" data-i18n="exp1.desc">Built the full frontend — responsive, mobile-first, deployed &amp; maintained.</div>
+                </div>
+              </div>
+              <div class="tl-item exp-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role" data-i18n="exp2.role">Waiter / Service</div>
+                  <div class="tl-org">Liechtenstein Winery · Wien</div>
+                  <div class="tl-date">06/2021 — 05/2025</div>
+                  <div class="tl-desc" data-i18n="exp2.desc">Customer service, wine tastings, product advice in restaurant &amp; events.</div>
+                </div>
+              </div>
+              <div class="tl-item exp-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role" data-i18n="exp3.role">Sales Associate</div>
+                  <div class="tl-org">VIP Profi Bäckerei · Wien</div>
+                  <div class="tl-date">03/2020 — 05/2021</div>
+                  <div class="tl-desc" data-i18n="exp3.desc">Sales, customer service, hygiene compliance.</div>
+                </div>
+              </div>
+              <div class="tl-item exp-item">
+                <div class="tl-dot"></div>
+                <div class="tl-body">
+                  <div class="tl-role" data-i18n="exp4.role">Waiter / Service</div>
+                  <div class="tl-org">SAZON Eventcatering &amp; Food Truck · Wien</div>
+                  <div class="tl-date">02/2016 — 04/2019</div>
+                  <div class="tl-desc" data-i18n="exp4.desc">À la carte service, customer advice, kitchen &amp; workplace hygiene.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="contact">
+    <h2 class="section-title"><span class="brace">{</span> <span data-i18n="contact.title">Contact</span> <span class="brace">}</span></h2>
+    <div class="section-sub" data-i18n="contact.sub">// let's build something together</div>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <span class="term-title"><span class="gb-ico"></span>/Users/Johann/contact</span>
+        <span class="win-controls">
+          <span class="win-btn">&#8211;</span>
+          <span class="win-btn">&#9633;</span>
+          <span class="win-btn close">&#10005;</span>
+        </span>
+      </div>
+      <div class="term-body">
+        <div class="gb-prompt"><span class="u">johann@Vienna</span> <span class="m"></span> <span class="p">~/contact</span></div>
+        <div class="gb-cmd"><span class="dollar">$</span>whoami</div>
+        <div class="term-out" data-i18n="contact.whoami">Johann Patiño · Java Developer · Vienna, AT</div>
+
+        <div class="gb-prompt"><span class="u">johann@Vienna</span> <span class="m"></span> <span class="p">~/contact</span></div>
+        <div class="gb-cmd"><span class="dollar">$</span>./connect --say-hi</div>
+
+        <a class="contact-row" href="mailto:johann7899@gmail.com">
+          <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+            </svg>
+          </span>
+          <span class="contact-meta"><span class="lbl">Email</span><span class="val">johann7899@gmail.com</span></span>
+          <span class="arrow">&rarr;</span>
+        </a>
+
+        <a class="contact-row" href="https://github.com/johannpatino" target="_blank" rel="noopener">
+          <span class="ic">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.7 18 5 18 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/>
+            </svg>
+          </span>
+          <span class="contact-meta"><span class="lbl">GitHub</span><span class="val">github.com/johannpatino</span></span>
+          <span class="arrow">&rarr;</span>
+        </a>
+
+        <a class="contact-row" href="https://www.linkedin.com/in/johann-patino" target="_blank" rel="noopener">
+          <span class="ic">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .78 0 1.74v20.52C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.74C24 .78 23.2 0 22.22 0z"/>
+            </svg>
+          </span>
+          <span class="contact-meta"><span class="lbl">LinkedIn</span><span class="val">linkedin.com/in/johann-patino</span></span>
+          <span class="arrow">&rarr;</span>
+        </a>
+
+        <div class="gb-prompt"><span class="u">johann@Vienna</span> <span class="m"></span> <span class="p">~/contact</span></div>
+        <div class="gb-cmd"><span class="dollar">$</span> <span class="blink2"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 100);
+    const CAM_DIST = 6;
+    camera.position.z = CAM_DIST;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    document.body.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.70));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+    sun.position.set(3, 4, 5); scene.add(sun);
+    const fill = new THREE.DirectionalLight(0x9fb4ff, 0.25);
+    fill.position.set(-4, 0, 2); scene.add(fill);
+
+    // flat-shaded voxel boxes (r arg accepted but unused, for call compatibility)
+    function box(w, h, d, color, x, y, z, r) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshLambertMaterial({ color, flatShading: true })
+      );
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    // ── Palette ──
+    const HAIR = 0x1a0e08, SKIN = 0xcc8055, EYE = 0x1a0e08, NOSE = 0xb87045, MOUTH = 0x7a3020;
+    // casual
+    const SHIRT = 0xb8b5b0, LOGO = 0xd4a840, SHORTS = 0xc4a040, SHOE = 0x0d0d0d;
+    // office
+    const OFFICE_BLUE = 0x3b6fb5, PANTS = 0x16181f, COLLAR = 0xeef2f7, BUTTON = 0xdce4f0;
+
+    const ch = new THREE.Group();
+
+    // ── HEAD ──
+    // face box front sits at z = +0.22; all facial features are shallow plates
+    // placed on that front surface only, so the back stays blank (no face on both sides).
+    const head = new THREE.Group();
+    const FACE_Z = 0.22;
+
+    // face + ears
+    head.add(box(0.82, 0.70, 0.44, SKIN,  0,     1.10, 0));
+    head.add(box(0.08, 0.18, 0.16, SKIN, -0.45,  1.10, 0.02));  // left ear
+    head.add(box(0.08, 0.18, 0.16, SKIN,  0.45,  1.10, 0.02));  // right ear
+
+    // hair — short, neat, hugs the head (not a tall helmet)
+    head.add(box(0.86, 0.26, 0.48, HAIR,  0,     1.48, 0));       // crown (low + flat)
+    head.add(box(0.88, 0.13, 0.50, HAIR,  0,     1.39, 0.02));    // fringe over forehead
+    head.add(box(0.08, 0.22, 0.42, HAIR, -0.45,  1.30, 0.04));    // left sideburn (short, thin)
+    head.add(box(0.08, 0.22, 0.42, HAIR,  0.45,  1.30, 0.04));    // right sideburn
+    head.add(box(0.80, 0.40, 0.14, HAIR,  0,     1.34, -0.17));   // back of head (tight)
+
+    // eyebrows (front plates)
+    head.add(box(0.24, 0.08, 0.08, HAIR, -0.17,  1.31, FACE_Z));
+    head.add(box(0.24, 0.08, 0.08, HAIR,  0.17,  1.31, FACE_Z));
+
+    // eyes (front plates)
+    head.add(box(0.15, 0.13, 0.08, EYE,  -0.17,  1.18, FACE_Z));
+    head.add(box(0.15, 0.13, 0.08, EYE,   0.17,  1.18, FACE_Z));
+
+    // nose + mouth (front)
+    head.add(box(0.11, 0.11, 0.12, NOSE,  0,     1.06, FACE_Z));
+    head.add(box(0.20, 0.07, 0.08, MOUTH, 0,     0.94, FACE_Z));
+    ch.add(head);
+
+    // Body alignment reference points (so every layer lines up):
+    //   torso: width 0.92 (x ±0.46), top at y 0.60, bottom at y -0.20
+    //   hips/shorts top meets torso bottom at y -0.20
+    //   arms are flush to the torso sides (inner edge = 0.46) with tops at y 0.60
+
+    // ── NECK ──
+    ch.add(box(0.26, 0.20, 0.28, SKIN, 0, 0.66, 0));
+
+    // ── TORSO (recolorable) ──
+    const torso = box(0.92, 0.96, 0.44, SHIRT, 0, 0.12, 0);   // y: -0.36 .. 0.60 (longer hem, covers waistband)
+    const logo  = box(0.26, 0.28, 0.06, LOGO,  0, 0.20, 0.20); // flush print on front
+    ch.add(torso, logo);
+
+    // office-only shirt details (hidden in casual) — sit FLUSH on the shirt surface
+    const collar   = box(0.50, 0.12, 0.45, COLLAR,  0,  0.56, 0);     // collar band at neckline
+    const placket  = box(0.08, 0.84, 0.05, 0x2f5d99, 0, 0.06, 0.215); // strip from under collar (0.48) to hem (-0.36)
+    const button1  = box(0.05, 0.05, 0.04, BUTTON,  0,  0.40, 0.225); // top: just below the collar
+    const button2  = box(0.05, 0.05, 0.04, BUTTON,  0,  0.23, 0.225);
+    const button3  = box(0.05, 0.05, 0.04, BUTTON,  0,  0.06, 0.225);
+    const button4  = box(0.05, 0.05, 0.04, BUTTON,  0, -0.11, 0.225);
+    const button5  = box(0.05, 0.05, 0.04, BUTTON,  0, -0.28, 0.225); // bottom: near the hem
+    const officeShirt = [collar, placket, button1, button2, button3, button4, button5];
+    officeShirt.forEach(m => { m.visible = false; ch.add(m); });
+
+    // ── ARMS (shoulder + arm + hand are ONE unit, pivoting at the shoulder) ──
+    // Each arm is a flush column against the torso side: sleeve top is level with the
+    // torso top, so the shoulder reads as a clean joint, not a stuck-on block.
+    function makeArm(side) {
+      const g = new THREE.Group();
+      const sleeve = box(0.27, 0.30, 0.41, SHIRT, 0, -0.11, 0); // sleeve cap (short sleeve in casual)
+      const arm    = box(0.27, 0.36, 0.41, SKIN,  0, -0.42, 0); // forearm — same girth as sleeve
+      const hand   = box(0.27, 0.18, 0.41, SKIN,  0, -0.69, 0); // hand (uniform, so office sleeve is straight)
+      g.add(sleeve, arm, hand);
+      g.position.set(side * 0.58, 0.56, 0);                     // pivot at the shoulder
+      ch.add(g);
+      return { g, sleeve, arm, hand };
+    }
+    const L = makeArm(-1), R = makeArm(1);
+    const armL = L.g, sleeveL = L.sleeve, armUpperL = L.arm;
+    const armR = R.g, sleeveR = R.sleeve, armUpperR = R.arm;
+
+    // ── LOWER BODY ── legs live in hip-pivot groups so they can swing (walk).
+    // The pivot sits at the shirt hem (-0.36) and the legs START there, so no part of a
+    // leg is above the pivot — nothing can swing up into / through the shirt.
+    // Waistbands stay on the body (hidden under the shirt) to fill the hips.
+    const HIP_Y = -0.36;
+    const legGroupL = new THREE.Group(); legGroupL.position.set(0, HIP_Y, 0);
+    const legGroupR = new THREE.Group(); legGroupR.position.set(0, HIP_Y, 0);
+    ch.add(legGroupL, legGroupR);
+    // a leg-group child's local y = its world y minus HIP_Y
+
+    // shoes (one per leg group, so each swings with its leg)
+    legGroupL.add(box(0.36, 0.16, 0.50, SHOE, -0.22, -1.30 - HIP_Y, 0.08));
+    legGroupR.add(box(0.36, 0.16, 0.50, SHOE,  0.22, -1.30 - HIP_Y, 0.08));
+
+    // CASUAL: khaki shorts (waist on body) + thigh legs & bare skin legs (in leg groups)
+    const bareLegL   = box(0.30, 0.62, 0.34, SKIN,  -0.22, -0.93 - HIP_Y, 0); // -1.24 .. -0.62
+    const bareLegR   = box(0.30, 0.62, 0.34, SKIN,   0.22, -0.93 - HIP_Y, 0);
+    const shortsLegL = box(0.40, 0.42, 0.40, SHORTS,-0.21, -0.57 - HIP_Y, 0); // -0.78 .. -0.36 (top at hem)
+    const shortsLegR = box(0.40, 0.42, 0.40, SHORTS, 0.21, -0.57 - HIP_Y, 0);
+    legGroupL.add(bareLegL, shortsLegL);
+    legGroupR.add(bareLegR, shortsLegR);
+    const shortsWaist= box(0.86, 0.16, 0.40, SHORTS, 0, -0.26, 0); ch.add(shortsWaist);
+    const casualLower = [bareLegL, bareLegR, shortsWaist, shortsLegL, shortsLegR];
+
+    // OFFICE: black trousers — uniform girth, top at the hem (-0.36) down to the ankle
+    const pantLegL  = box(0.40, 0.88, 0.40, PANTS, -0.21, -0.80 - HIP_Y, 0); // -1.24 .. -0.36
+    const pantLegR  = box(0.40, 0.88, 0.40, PANTS,  0.21, -0.80 - HIP_Y, 0);
+    legGroupL.add(pantLegL); legGroupR.add(pantLegR);
+    const pantWaist = box(0.86, 0.16, 0.40, PANTS, 0, -0.26, 0); ch.add(pantWaist);
+    const officeLower = [pantWaist, pantLegL, pantLegR];
+    officeLower.forEach(m => { m.visible = false; });
+
+    // ── SOFT CONTACT SHADOW ──
+    const shCanvas = document.createElement('canvas');
+    shCanvas.width = shCanvas.height = 128;
+    const sctx = shCanvas.getContext('2d');
+    const grd = sctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+    grd.addColorStop(0, 'rgba(30,30,50,0.45)');
+    grd.addColorStop(1, 'rgba(30,30,50,0)');
+    sctx.fillStyle = grd; sctx.fillRect(0, 0, 128, 128);
+    const shadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.4, 1.1),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shCanvas), transparent: true, depthWrite: false })
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = -1.40;
+    ch.add(shadow);
+
+    scene.add(ch);
+
+    // ── OUTFIT SWAP ──
+    let office = false;
+    function setOutfit(toOffice) {
+      if (toOffice === office) return;
+      office = toOffice;
+      const shirtCol = toOffice ? OFFICE_BLUE : SHIRT;
+      [torso, sleeveL, sleeveR].forEach(m => m.material.color.setHex(shirtCol));
+      // long sleeves: upper arms take the shirt color
+      [armUpperL, armUpperR].forEach(m => m.material.color.setHex(toOffice ? OFFICE_BLUE : SKIN));
+      // swap shorts+bare legs for trousers (different shapes, so toggle, not recolor)
+      casualLower.forEach(m => m.visible = !toOffice);
+      officeLower.forEach(m => m.visible = toOffice);
+      // toggle shirt details
+      logo.visible = !toOffice;
+      officeShirt.forEach(m => m.visible = toOffice);
+    }
+
+    // ── RESPONSIVE PLACEMENT ──
+    const base = { x: 0, y: 0 };
+    function placeCharacter() {
+      const halfH = Math.tan((camera.fov * Math.PI / 180) / 2) * CAM_DIST;
+      const halfW = halfH * camera.aspect;
+      if (camera.aspect >= 1) {
+        ch.scale.setScalar(0.80);
+        base.x = halfW * 0.46; base.y = halfH * 0.10;
+      } else {
+        ch.scale.setScalar(0.58);
+        base.x = halfW * 0.10; base.y = halfH * 0.42;
+      }
+    }
+
+    // ── SCROLL STATE ──
+    let scrollProg = 0;
+    function onScroll() {
+      scrollProg = Math.min(Math.max(scrollY / innerHeight, 0), 1);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // ── LOOP ──
+    let bodyY = -6;                 // separate from bob so the entrance still eases in
+    ch.position.set(0, -6, 0);
+    placeCharacter();
+
+    const WALK = 3.4;               // step frequency
+    const clock = new THREE.Clock();
+    (function loop() {
+      requestAnimationFrame(loop);
+      const t = clock.getElapsedTime();
+      const step = Math.sin(t * WALK);
+
+      // entrance rise + placement, with a little bounce on each step
+      ch.position.x += (base.x - ch.position.x) * 0.08;
+      bodyY += (base.y - bodyY) * 0.06;
+      ch.position.y = bodyY + Math.abs(step) * 0.03;
+
+      // spin tied to scroll (one full turn), plus gentle idle sway
+      const spin = scrollProg * Math.PI * 2;
+      ch.rotation.y = spin + Math.sin(t * 0.5) * 0.10;
+
+      // change clothes mid-spin, while facing away
+      setOutfit(scrollProg > 0.5);
+
+      head.position.y = Math.sin(t * 1.4) * 0.018;
+
+      // walk cycle — legs swing from the hips, arms counter-swing
+      legGroupL.rotation.x =  step * 0.38;
+      legGroupR.rotation.x = -step * 0.38;
+      armL.rotation.x = -step * 0.30;
+      armR.rotation.x = scrollProg < 0.15 ? 0 : step * 0.30; // don't swing the waving arm
+
+      // wave only while in casual hero view; arm rests once dressed up
+      const waveTarget = scrollProg < 0.15
+        ? 2.15 + Math.sin(t * 5.0) * 0.42
+        : 0.0;
+      armR.rotation.z += (waveTarget - armR.rotation.z) * 0.10;
+
+      renderer.render(scene, camera);
+    })();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      placeCharacter();
+    });
+  </script>
+
+  <script>
+    // ── i18n ──
+    const LANG = {
+      en: {
+        'hero.kicker':    "Hello, I'm",
+        'hero.desc':      'Backend &amp; full-stack — Spring Boot, SQL, Docker. Based in Vienna, Austria.',
+        'hero.scroll':    'scroll ↓',
+        'projects.title': 'Projects',
+        'projects.sub':   "// a few things I've built",
+        'proj1.desc':     'Designed and built the frontend for a Vienna-based business — responsive layout, mobile-first, deployed and maintained.',
+        'proj2.desc':     'This interactive CV — a voxel character rendered in WebGL that reacts to scroll and changes outfits.',
+        'proj3.desc':     'A backend service with layered architecture, JPA persistence and containerized deployment.',
+        'cv.title':       'About Me',
+        'cv.sub':         '// background &amp; experience',
+        'cv.summary':     '<strong>Software Developer</strong> focused on Java backend and web development. Currently training at <strong>everyonecodes Wien</strong>, with a completed full-stack bootcamp and real-world project experience — including a live client website. Motivated to grow continuously in software engineering.',
+        'cv.edu':         '// education',
+        'edu1.date':      '12/2025 — present',
+        'edu1.desc':      'Java, OOP, Spring Boot, Spring Data, Spring Security, SQL, Docker',
+        'edu2.desc':      'HTML5, CSS3, JS ES6+, React, Node.js, Express, MongoDB, REST APIs',
+        'edu3.role':      'Economía Empresarial',
+        'edu3.date':      '2011 — 2014 (incomplete)',
+        'cv.lang':        '// languages',
+        'lang.es':        'Spanish — native',
+        'lang.de':        'German — B2',
+        'lang.en':        'English — C1',
+        'cv.skills':      '// technical skills',
+        'cv.exp':         '// experience',
+        'exp1.role':      'Webdesign &amp; Implementation',
+        'exp1.desc':      'Built the full frontend — responsive, mobile-first, deployed &amp; maintained.',
+        'exp2.role':      'Waiter / Service',
+        'exp2.desc':      'Customer service, wine tastings, product advice in restaurant &amp; events.',
+        'exp3.role':      'Sales Associate',
+        'exp3.desc':      'Sales, customer service, hygiene compliance.',
+        'exp4.role':      'Waiter / Service',
+        'exp4.desc':      'À la carte service, customer advice, kitchen &amp; workplace hygiene.',
+        'contact.title':  'Contact',
+        'contact.sub':    "// let's build something together",
+        'contact.whoami': 'Johann Patiño · Java Developer · Vienna, AT',
+      },
+      de: {
+        'hero.kicker':    'Hallo, ich bin',
+        'hero.desc':      'Backend &amp; Full-Stack — Spring Boot, SQL, Docker. Wohnhaft in Wien, Österreich.',
+        'hero.scroll':    'scrollen ↓',
+        'projects.title': 'Projekte',
+        'projects.sub':   '// ein paar Dinge, die ich gebaut habe',
+        'proj1.desc':     'Frontend für ein Wiener Unternehmen entworfen und umgesetzt — responsiv, mobile-first, deployed und gewartet.',
+        'proj2.desc':     'Dieses interaktive Portfolio — ein Voxel-Charakter in WebGL, der auf Scrollen reagiert und Outfits wechselt.',
+        'proj3.desc':     'Ein Backend-Service mit Schichtenarchitektur, JPA-Persistenz und containerisiertem Deployment.',
+        'cv.title':       'Über mich',
+        'cv.sub':         '// Hintergrund &amp; Erfahrung',
+        'cv.summary':     '<strong>Software Developer</strong> mit Schwerpunkt auf Java-Backend und Webentwicklung. Aktuell in Ausbildung bei <strong>everyonecodes Wien</strong>, mit abgeschlossenem Full-Stack-Bootcamp und erster Projekterfahrung — darunter eine reale Kundenwebsite. Motiviert, in der Softwareentwicklung kontinuierlich zu wachsen.',
+        'cv.edu':         '// Ausbildung',
+        'edu1.date':      '12/2025 — heute',
+        'edu1.desc':      'Java, OOP, Spring Boot, Spring Data, Spring Security, SQL, Docker',
+        'edu2.desc':      'HTML5, CSS3, JS ES6+, React, Node.js, Express, MongoDB, REST APIs',
+        'edu3.role':      'Wirtschaftswissenschaften',
+        'edu3.date':      '2011 — 2014 (nicht abgeschlossen)',
+        'cv.lang':        '// Sprachen',
+        'lang.es':        'Spanisch — Muttersprache',
+        'lang.de':        'Deutsch — B2',
+        'lang.en':        'Englisch — C1',
+        'cv.skills':      '// Technische Fähigkeiten',
+        'cv.exp':         '// Berufserfahrung',
+        'exp1.role':      'Webdesign &amp; Umsetzung',
+        'exp1.desc':      'Gesamtes Frontend umgesetzt — responsiv, mobile-first, deployed &amp; gewartet.',
+        'exp2.role':      'Kellner / Service',
+        'exp2.desc':      'Kundenbetreuung, Weinverkostungen, Beratung in Restaurant &amp; Veranstaltungen.',
+        'exp3.role':      'Mitarbeiter im Verkauf',
+        'exp3.desc':      'Verkauf, Kundenberatung, Hygieneverantwortung.',
+        'exp4.role':      'Kellner / Service',
+        'exp4.desc':      'Service à la carte, Kundenberatung, Küchen- &amp; Arbeitsplatzhygiene.',
+        'contact.title':  'Kontakt',
+        'contact.sub':    '// Lass uns zusammen etwas aufbauen',
+        'contact.whoami': 'Johann Patiño · Java Developer · Wien, AT',
+      }
+    };
+
+    let currentLang = 'en';
+    function toggleLang() {
+      currentLang = currentLang === 'en' ? 'de' : 'en';
+      document.getElementById('langBtn').textContent = currentLang === 'en' ? 'DE' : 'EN';
+      const dict = LANG[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const val = dict[el.dataset.i18n];
+        if (val !== undefined) el.innerHTML = val;
+      });
+    }
+  </script>
+</body>
+</html>
