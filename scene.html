@@ -1141,15 +1141,17 @@
 
     // ── RESPONSIVE PLACEMENT ──
     const base = { x: 0, y: 0 };
+    let isPortrait = false;
     function placeCharacter() {
       const halfH = Math.tan((camera.fov * Math.PI / 180) / 2) * CAM_DIST;
       const halfW = halfH * camera.aspect;
+      isPortrait = camera.aspect < 1;
       if (camera.aspect >= 1) {
         ch.scale.setScalar(0.80);
         base.x = halfW * 0.46; base.y = halfH * 0.10;
       } else {
-        ch.scale.setScalar(0.551);          // 5% smaller than desktop's portrait size
-        base.x = halfW * -0.38; base.y = halfH * 0.42;   // shifted well left of centre
+        ch.scale.setScalar(0.493);          // 15% smaller than desktop's portrait size
+        base.x = halfW * -0.46; base.y = halfH * 0.52;   // tucked into the top-left
       }
     }
 
@@ -1206,9 +1208,11 @@
       bodyY += (base.y - bodyY) * damp(6);
       ch.position.y = bodyY + Math.abs(step) * 0.03 * walkAmt + jump;
 
-      // first segment: one full yaw turn (hides the casual→office swap), plus idle sway
+      // first segment: one full yaw turn (hides the casual→office swap), plus idle sway.
+      // On mobile he turns a quarter further in the final stance so he ends up sideways.
       const spin1 = Math.min(p, 1) * Math.PI * 2;
-      ch.rotation.y = spin1 + Math.sin(t * 0.5) * 0.10 * (1 - inContact);
+      const sideways = isPortrait ? (Math.PI / 2) * landed : 0;
+      ch.rotation.y = spin1 + sideways + Math.sin(t * 0.5) * 0.10 * (1 - inContact);
       // the contact transition is a backflip (pitch), not another yaw spin
       ch.rotation.x = -flip;
 
