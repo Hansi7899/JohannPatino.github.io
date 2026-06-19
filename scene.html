@@ -18,6 +18,28 @@
       scroll-behavior: smooth;
     }
 
+    /* Respect users who ask for less motion: drop smooth scrolling and the looping
+       text/cursor animations. (The 3D character is the page's centrepiece and stays.) */
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .intro .kicker,
+      .intro h1,
+      .intro h2,
+      .intro p {
+        opacity: 1;
+        animation: none;
+      }
+
+      .blink,
+      .blink2,
+      .scrollcue {
+        animation: none;
+      }
+    }
+
     body {
       min-height: 100%;
       background:
@@ -400,9 +422,12 @@
 
     /* On mobile the character sits over the text column; lift the (transparent)
        canvas above the sections so any text behind him is hidden by his body. */
-    @media (max-width: 760px) {
-      canvas {
-        z-index: 3;
+    @media (max-width: 767px) {
+      .section-title,
+      .section-sub {
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border-radius: 10px;
       }
     }
 
@@ -663,11 +688,34 @@
       }
     }
 
-    @media (max-width: 760px) {
+    @media (max-width: 767px) {
       section {
         padding-top: 12vh;
         justify-content: flex-end;
         padding-bottom: 8vh;
+      }
+
+      /* hero text sits high, just under the top-left character (closes the gap) */
+      .hero {
+        justify-content: flex-start;
+        padding-top: 60vh;
+      }
+
+      /* less empty space above the Projects title */
+      .projects {
+        justify-content: flex-start;
+        padding-top: 8vh;
+      }
+
+      /* pull the Contact section up closer to the CV/About above it, but never above the
+         shrunk character's feet (--feet-vh, computed in placeCharacter on load/resize). */
+      .contact {
+        justify-content: flex-start;
+        padding-top: max(29vh, var(--feet-vh, 29vh));
+      }
+
+      .cv {
+        padding-bottom: 3vh;
       }
 
       .intro {
@@ -676,6 +724,11 @@
 
       .intro p {
         margin: 0 auto;
+      }
+
+      /* lift the scroll cue up so it's clearly visible above the fold */
+      .scrollcue {
+        bottom: 9vh;
       }
 
       .terminal {
@@ -953,8 +1006,8 @@
     const fill = new THREE.DirectionalLight(0x9fb4ff, 0.25);
     fill.position.set(-4, 0, 2); scene.add(fill);
 
-    // flat-shaded voxel boxes (r arg accepted but unused, for call compatibility)
-    function box(w, h, d, color, x, y, z, r) {
+    // flat-shaded voxel box at (x, y, z)
+    function box(w, h, d, color, x, y, z) {
       const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(w, h, d),
         new THREE.MeshLambertMaterial({ color, flatShading: true })
@@ -1111,7 +1164,10 @@
     // reads as held in front of — not buried inside — the hand. When the arm raises
     // this lands the phone right in front of the face/eyes.
     phone.position.set(-0.11, -0.63, 0.2);
-    phone.rotation.set(20, 55, -100);  // vertical along the cheek, turned so the teal screen faces the camera
+    // Euler angles are RADIANS in Three.js. These were originally authored as raw (20, 55, -100),
+    // which the engine wrapped mod 2π to the orientation below (~66°, -89°, 30°) — phone vertical
+    // along the cheek, teal screen toward the camera. Written out explicitly so the intent is clear.
+    phone.rotation.set(1.150444, -1.548668, 0.530965);
     phone.visible = false;
     armR.add(phone);
 
@@ -1142,17 +1198,47 @@
     // ── RESPONSIVE PLACEMENT ──
     const base = { x: 0, y: 0 };
     let isPortrait = false;
+    // On mobile the character animates between two poses as you scroll:
+    //   hero    — bigger & centred (top of page)
+    //   scrolled— smaller & tucked to the top-left (rest of the page)
+    const mobHero = { x: 0, y: 0, s: 0.50 };
+    const mobScroll = { x: 0, y: 0, s: 0.25 };
+    let placedOnce = false;
     function placeCharacter() {
-      const halfH = Math.tan((camera.fov * Math.PI / 170) / 2) * CAM_DIST;
+      // Half-extents of the camera frustum at the character's depth (z=0), in world units.
+      // Multiplying by CAM_DIST is exact because the character plane passes through the origin.
+      const halfH = Math.tan((camera.fov * Math.PI / 180) / 2) * CAM_DIST;
       const halfW = halfH * camera.aspect;
-      isPortrait = camera.aspect < 1;
-      if (camera.aspect >= 1) {
+      // Shrink-and-move-left mode only on phones (< 768px). Tablets/desktop keep the
+      // character on the right at full size, like desktop.
+      isPortrait = innerWidth < 768;
+      if (!isPortrait) {
         ch.scale.setScalar(0.80);
-        base.x = halfW * 0.46; base.y = halfH * 0.10;
+        base.x = halfW * 0.4871; base.y = halfH * 0.1059;
       } else {
-        ch.scale.setScalar(0.493);          // 15% smaller than desktop's portrait size
-        base.x = halfW * -0.46; base.y = halfH * 0.52;   // tucked into the top-left
+        // hero: centred & higher; scrolled: further left & tucked up.
+        // Only (re)compute the endpoints here — the loop owns base.x/y and ch.scale and
+        // interpolates them every frame from scroll. Snapping them here would cause a
+        // one-frame "pop" whenever a mid-scroll resize fires (e.g. mobile URL-bar show/hide).
+        mobHero.x = halfW * 0.0529;  mobHero.y = halfH * 0.2859;
+        mobScroll.x = halfW * -0.6141; mobScroll.y = halfH * 0.5082;
+
+        // Where are the shrunk character's feet on screen? (camera looks straight down -Z,
+        // so world-y maps linearly to viewport height.) Expose it so the Contact section's
+        // padding never lets its title rise above the feet.
+        const FEET_LOCAL_Y = -1.38;                       // bottom of the shoes in model space
+        const feetY = mobScroll.y + FEET_LOCAL_Y * mobScroll.s;
+        const feetFromTopVH = (0.5 - feetY / (2 * halfH)) * 100;
+        document.documentElement.style.setProperty('--feet-vh', feetFromTopVH.toFixed(2) + 'vh');
+
+        // Seed the starting pose ONCE (first load) so there's no flash before the loop
+        // takes over; never on subsequent resizes — that's what caused the size pop.
+        if (!placedOnce) {
+          base.x = mobHero.x; base.y = mobHero.y;
+          ch.scale.setScalar(mobHero.s);
+        }
       }
+      placedOnce = true;
     }
 
     // ── SCROLL STATE ──
@@ -1166,6 +1252,17 @@
     const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
     const smoothstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
+    // The backflip fires only while the contact terminal is FULLY on screen; if any of it
+    // scrolls off, terminalFull flips false → the flip reverses and the outfit reverts to office.
+    let terminalFull = false;
+    const terminalEl = document.querySelector('.terminal');
+    if (terminalEl) {
+      new IntersectionObserver(
+        ([e]) => { terminalFull = e.intersectionRatio >= 0.999; },
+        { threshold: [0, 0.5, 0.999, 1] }
+      ).observe(terminalEl);
+    }
+
     // ── LOOP ──
     let bodyY = -6;                 // separate from bob so the entrance still eases in
     ch.position.set(0, -6, 0);
@@ -1176,6 +1273,7 @@
     let lastT = 0;
     // smoothed limb targets so transitions (e.g. raising the phone) ease in
     const sm = { aRx: 0, aRz: 0, aLx: 0, aLz: 0, headX: 0 };
+    let flipP = 0;                  // time-based backflip progress (0..1), paced independently of scroll
     (function loop() {
       requestAnimationFrame(loop);
       const t = clock.getElapsedTime();
@@ -1189,35 +1287,54 @@
 
       // ── activity windows (continuous, so motions cross-fade) ──
       // spin completes over the hero→projects segment; he's stationary until it ends.
-      const spinDone = smoothstep(0.65, 1.0, p);          // 0 in hero, 1 once turned
+      const spinDone = smoothstep(0.85, 1.0, p);          // 0 in hero, 1 once turned
       const inContact = smoothstep(2.45, 3.0, p);         // ramps up in the contact section
-      const walkAmt = spinDone * (1 - inContact);         // walk only between spin-end and contact
       const waveAmt = 1 - smoothstep(0.0, 0.15, p);       // wave only at the very top
 
       // ── BACKFLIP transition (office → contact) ──
-      // As he heads into the contact section he leaps into a full backward flip; the
-      // outfit swaps mid-air while he's upside-down, then he lands in the hoodie.
-      const flipAmt = smoothstep(2.3, 3.0, p);            // 0 before, 1 once landed
+      // Triggered when the contact terminal is fully visible, but PACED by time so the flip
+      // plays at a steady, readable speed. flipP eases 0→1 over FLIP_DUR once triggered.
+      const FLIP_DUR = 1.2;                               // seconds for the forward flip (lower = faster)
+      const FLIP_BACK_DUR = 1.2;                          // rewind speed when the user scrolls back up
+      const flipTarget = terminalFull ? 1 : 0;          // flip only while the contact terminal is fully visible
+      const flipDur = flipTarget > flipP ? FLIP_DUR : FLIP_BACK_DUR;
+      flipP += Math.sign(flipTarget - flipP) * Math.min(Math.abs(flipTarget - flipP), delta / flipDur);
+      const flipAmt = smoothstep(0, 1, flipP);            // eased ends for a soft launch/landing
       const flip = flipAmt * Math.PI * 2;                 // one full rotation, top tips backward
-      const jump = Math.sin(flipAmt * Math.PI) * 1.4;     // up-and-down arc, peaks mid-flip
+      const jump = Math.sin(flipAmt * Math.PI) * 0.6;     // up-and-down arc, peaks mid-flip
       const tuck = Math.sin(flipAmt * Math.PI);           // limbs pulled in mid-air, extended on landing
       const landed = smoothstep(0.85, 1.0, flipAmt);      // phone-to-ear pose only after touchdown
+
+      // Walk continuously from spin-end until the backflip actually begins (so he walks the
+      // whole way through About and only stops as he launches into the flip).
+      const walkAmt = spinDone * (1 - flipAmt);
+
+      // ── mobile: shrink & slide left as the user leaves the hero ──
+      if (isPortrait) {
+        const m = smoothstep(0, 1, p);               // 0 at hero, 1 once scrolled in
+        base.x = mobHero.x + (mobScroll.x - mobHero.x) * m;
+        base.y = mobHero.y + (mobScroll.y - mobHero.y) * m;
+        const s = mobHero.s + (mobScroll.s - mobHero.s) * m;
+        ch.scale.setScalar(ch.scale.x + (s - ch.scale.x) * damp(8));
+      }
 
       // ── entrance rise + placement; bounce only while actually walking ──
       ch.position.x += (base.x - ch.position.x) * damp(8);
       bodyY += (base.y - bodyY) * damp(6);
       ch.position.y = bodyY + Math.abs(step) * 0.03 * walkAmt + jump;
 
-      // first segment: one full yaw turn (hides the casual→office swap), plus idle sway.
-      // On mobile he turns ~80° further in the final stance so he ends up near-sideways.
-      const spin1 = Math.min(p, 1) * Math.PI * 2;
-      const sideways = isPortrait ? (80 * Math.PI / 180) * landed : 0;
-      ch.rotation.y = spin1 + sideways + Math.sin(t * 0.5) * 0.10 * (1 - inContact);
+      // first segment: hold still a bit, then a quick full yaw turn (hides the casual→office
+      // swap), plus idle sway. Spin runs over p 0.35→0.85 (faster than the old 0→1).
+      const spin1 = smoothstep(0.35, 0.85, p) * Math.PI * 2;
+      const sideways = isPortrait ? (30 * Math.PI / 180) * landed : 0;
+      // slow, pronounced left/right body sway on its own cadence — only while walking
+      const walkSway = Math.sin(t * 1.1) * 0.5 * walkAmt;
+      ch.rotation.y = spin1 + sideways + walkSway + Math.sin(t * 0.5) * 0.10 * (1 - inContact);
       // the contact transition is a backflip (pitch), not another yaw spin
       ch.rotation.x = -flip;
 
-      // outfit: casual → office mid-spin → off-duty hoodie in the contact section
-      setOutfit(p > 2.55 ? 'contact' : p > 0.5 ? 'office' : 'casual');
+      // outfit: casual → office mid-spin → off-duty hoodie swapped mid-backflip (hidden by the spin)
+      setOutfit(flipAmt > 0.5 ? 'contact' : p > 0.5 ? 'office' : 'casual');
 
       // head nod: gentle idle, livelier "talking" bob while on the phone
       head.position.y = Math.sin(t * 1.4) * 0.018 + Math.sin(t * 2.6) * 0.022 * inContact;
@@ -1339,15 +1456,25 @@
       }
     };
 
+    // Page <title> per language — kept here so the browser tab follows the toggle too.
+    const TITLE = { en: 'Johann Patiño — Java Developer', de: 'Johann Patiño — Java-Entwickler' };
+
+    const langBtn = document.getElementById('langBtn');
     let currentLang = 'en';
-    function toggleLang() {
-      currentLang = currentLang === 'en' ? 'de' : 'en';
-      document.getElementById('langBtn').textContent = currentLang === 'en' ? 'DE' : 'EN';
-      const dict = LANG[currentLang];
+    function applyLang(lang) {
+      currentLang = lang;
+      const dict = LANG[lang];
+      document.documentElement.lang = lang;           // keep <html lang> in sync for a11y / screen readers
+      document.title = TITLE[lang];
+      langBtn.textContent = lang === 'en' ? 'DE' : 'EN';
+      langBtn.setAttribute('aria-label', lang === 'en' ? 'Switch to German' : 'Auf Englisch umschalten');
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const val = dict[el.dataset.i18n];
         if (val !== undefined) el.innerHTML = val;
       });
+    }
+    function toggleLang() {
+      applyLang(currentLang === 'en' ? 'de' : 'en');
     }
   </script>
 </body>
