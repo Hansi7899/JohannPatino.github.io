@@ -398,6 +398,14 @@
       }
     }
 
+    /* On mobile the character sits over the text column; lift the (transparent)
+       canvas above the sections so any text behind him is hidden by his body. */
+    @media (max-width: 760px) {
+      canvas {
+        z-index: 3;
+      }
+    }
+
     /* ── CONTACT (terminal) ── */
     .contact {
       max-width: 680px;
@@ -1140,8 +1148,8 @@
         ch.scale.setScalar(0.80);
         base.x = halfW * 0.46; base.y = halfH * 0.10;
       } else {
-        ch.scale.setScalar(0.58);
-        base.x = halfW * 0.10; base.y = halfH * 0.42;
+        ch.scale.setScalar(0.551);          // 5% smaller than desktop's portrait size
+        base.x = halfW * -0.38; base.y = halfH * 0.42;   // shifted well left of centre
       }
     }
 
