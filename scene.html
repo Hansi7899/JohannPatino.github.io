@@ -961,6 +961,8 @@
     const SHIRT = 0xb8b5b0, LOGO = 0xd4a840, SHORTS = 0xc4a040, SHOE = 0x0d0d0d;
     // office
     const OFFICE_BLUE = 0x3b6fb5, PANTS = 0x16181f, COLLAR = 0xeef2f7, BUTTON = 0xdce4f0;
+    // contact "off the clock" look — warm terracotta hoodie + denim
+    const HOODIE = 0xc05f3c, DENIM = 0x35506e, PHONE_BODY = 0x121316, PHONE_SCREEN = 0x6fd6c8;
 
     const ch = new THREE.Group();
 
@@ -1040,7 +1042,7 @@
     // The pivot sits at the shirt hem (-0.36) and the legs START there, so no part of a
     // leg is above the pivot — nothing can swing up into / through the shirt.
     // Waistbands stay on the body (hidden under the shirt) to fill the hips.
-    const HIP_Y = -0.36;
+    const HIP_Y = 0.2;
     const legGroupL = new THREE.Group(); legGroupL.position.set(0, HIP_Y, 0);
     const legGroupR = new THREE.Group(); legGroupR.position.set(0, HIP_Y, 0);
     ch.add(legGroupL, legGroupR);
@@ -1081,26 +1083,52 @@
       new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shCanvas), transparent: true, depthWrite: false })
     );
     shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = -1.40;
+    shadow.position.y = -1.4;
     ch.add(shadow);
+
+    // ── PHONE ── parented to the right hand so it travels with the arm.
+    // The hand sits at armR-local (0, -0.69, 0) with depth 0.41; the phone is
+    // gripped just past the fingertips, screen facing the character's face.
+    const phone = new THREE.Group();
+    const phoneBody = box(0.20, 0.42, 0.05, PHONE_BODY, 0, 0, 0);   // slim slab (slightly larger)
+    const phoneScreen = new THREE.Mesh(                              // glowing front
+      new THREE.PlaneGeometry(0.18, 0.38),
+      new THREE.MeshBasicMaterial({ color: PHONE_SCREEN })
+    );
+    phoneScreen.position.set(0, 0.01, 0.032);
+    const phoneCam = box(0.04, 0.04, 0.02, 0x05060a, -0.057, 0.165, -0.032);  // rear camera
+    const phoneSpk = box(0.06, 0.014, 0.01, 0x2a2c30, 0, 0.185, 0.034);       // earpiece slit
+    phone.add(phoneBody, phoneScreen, phoneCam, phoneSpk);
+    // grip at the hand (armR-local y≈-0.69), pushed well past the fingertips so it
+    // reads as held in front of — not buried inside — the hand. When the arm raises
+    // this lands the phone right in front of the face/eyes.
+    phone.position.set(-0.11, -0.63, 0.2);
+    phone.rotation.set(20, 55, -100);  // vertical along the cheek, turned so the teal screen faces the camera
+    phone.visible = false;
+    armR.add(phone);
 
     scene.add(ch);
 
-    // ── OUTFIT SWAP ──
-    let office = false;
-    function setOutfit(toOffice) {
-      if (toOffice === office) return;
-      office = toOffice;
-      const shirtCol = toOffice ? OFFICE_BLUE : SHIRT;
+    // ── OUTFIT SWAP ── three looks: 'casual' (hero), 'office' (work), 'contact' (off-duty hoodie).
+    let outfit = '';
+    function setOutfit(mode) {
+      if (mode === outfit) return;
+      outfit = mode;
+      const isOffice = mode === 'office';
+      const isContact = mode === 'contact';
+      const hasLongSleeves = isOffice || isContact;   // both cover the arms
+      const shirtCol = isOffice ? OFFICE_BLUE : isContact ? HOODIE : SHIRT;
       [torso, sleeveL, sleeveR].forEach(m => m.material.color.setHex(shirtCol));
-      // long sleeves: upper arms take the shirt color
-      [armUpperL, armUpperR].forEach(m => m.material.color.setHex(toOffice ? OFFICE_BLUE : SKIN));
-      // swap shorts+bare legs for trousers (different shapes, so toggle, not recolor)
-      casualLower.forEach(m => m.visible = !toOffice);
-      officeLower.forEach(m => m.visible = toOffice);
-      // toggle shirt details
-      logo.visible = !toOffice;
-      officeShirt.forEach(m => m.visible = toOffice);
+      [armUpperL, armUpperR].forEach(m => m.material.color.setHex(hasLongSleeves ? shirtCol : SKIN));
+      // legs: bare-skin shorts (casual) vs. full trousers (office=black, contact=denim)
+      const longLegs = isOffice || isContact;
+      casualLower.forEach(m => m.visible = !longLegs);
+      officeLower.forEach(m => m.visible = longLegs);
+      const legCol = isContact ? DENIM : PANTS;
+      [pantWaist, pantLegL, pantLegR].forEach(m => m.material.color.setHex(legCol));
+      // shirt details only belong to the office button-down
+      logo.visible = mode === 'casual';
+      officeShirt.forEach(m => m.visible = isOffice);
     }
 
     // ── RESPONSIVE PLACEMENT ──
@@ -1118,11 +1146,15 @@
     }
 
     // ── SCROLL STATE ──
-    let scrollProg = 0;
+    // 0..3 across the four sections (hero, projects, about, contact).
+    // scrollTarget is raw; scrollProg low-pass-follows it for a smooth, weighty feel.
+    let scrollTarget = 0, scrollProg = 0;
     function onScroll() {
-      scrollProg = Math.min(Math.max(scrollY / innerHeight, 0), 1);
+      scrollTarget = Math.min(Math.max(scrollY / innerHeight, 0), 3);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
+    const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
+    const smoothstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
     // ── LOOP ──
     let bodyY = -6;                 // separate from bob so the entrance still eases in
@@ -1131,36 +1163,81 @@
 
     const WALK = 3.4;               // step frequency
     const clock = new THREE.Clock();
+    let lastT = 0;
+    // smoothed limb targets so transitions (e.g. raising the phone) ease in
+    const sm = { aRx: 0, aRz: 0, aLx: 0, aLz: 0, headX: 0 };
     (function loop() {
       requestAnimationFrame(loop);
       const t = clock.getElapsedTime();
+      const delta = Math.min(0.05, t - lastT); lastT = t;
+      const damp = (rate) => 1 - Math.exp(-delta * rate);
+
+      // smooth the scroll input — the source of the buttery, weighty feel
+      scrollProg += (scrollTarget - scrollProg) * damp(7);
+      const p = scrollProg;
       const step = Math.sin(t * WALK);
 
-      // entrance rise + placement, with a little bounce on each step
-      ch.position.x += (base.x - ch.position.x) * 0.08;
-      bodyY += (base.y - bodyY) * 0.06;
-      ch.position.y = bodyY + Math.abs(step) * 0.03;
+      // ── activity windows (continuous, so motions cross-fade) ──
+      // spin completes over the hero→projects segment; he's stationary until it ends.
+      const spinDone = smoothstep(0.65, 1.0, p);          // 0 in hero, 1 once turned
+      const inContact = smoothstep(2.45, 3.0, p);         // ramps up in the contact section
+      const walkAmt = spinDone * (1 - inContact);         // walk only between spin-end and contact
+      const waveAmt = 1 - smoothstep(0.0, 0.15, p);       // wave only at the very top
 
-      // spin tied to scroll (one full turn), plus gentle idle sway
-      const spin = scrollProg * Math.PI * 2;
-      ch.rotation.y = spin + Math.sin(t * 0.5) * 0.10;
+      // ── BACKFLIP transition (office → contact) ──
+      // As he heads into the contact section he leaps into a full backward flip; the
+      // outfit swaps mid-air while he's upside-down, then he lands in the hoodie.
+      const flipAmt = smoothstep(2.3, 3.0, p);            // 0 before, 1 once landed
+      const flip = flipAmt * Math.PI * 2;                 // one full rotation, top tips backward
+      const jump = Math.sin(flipAmt * Math.PI) * 1.4;     // up-and-down arc, peaks mid-flip
+      const tuck = Math.sin(flipAmt * Math.PI);           // limbs pulled in mid-air, extended on landing
+      const landed = smoothstep(0.85, 1.0, flipAmt);      // phone-to-ear pose only after touchdown
 
-      // change clothes mid-spin, while facing away
-      setOutfit(scrollProg > 0.5);
+      // ── entrance rise + placement; bounce only while actually walking ──
+      ch.position.x += (base.x - ch.position.x) * damp(8);
+      bodyY += (base.y - bodyY) * damp(6);
+      ch.position.y = bodyY + Math.abs(step) * 0.03 * walkAmt + jump;
 
-      head.position.y = Math.sin(t * 1.4) * 0.018;
+      // first segment: one full yaw turn (hides the casual→office swap), plus idle sway
+      const spin1 = Math.min(p, 1) * Math.PI * 2;
+      ch.rotation.y = spin1 + Math.sin(t * 0.5) * 0.10 * (1 - inContact);
+      // the contact transition is a backflip (pitch), not another yaw spin
+      ch.rotation.x = -flip;
 
-      // walk cycle — legs swing from the hips, arms counter-swing
-      legGroupL.rotation.x = step * 0.38;
-      legGroupR.rotation.x = -step * 0.38;
-      armL.rotation.x = -step * 0.30;
-      armR.rotation.x = scrollProg < 0.15 ? 0 : step * 0.30; // don't swing the waving arm
+      // outfit: casual → office mid-spin → off-duty hoodie in the contact section
+      setOutfit(p > 2.55 ? 'contact' : p > 0.5 ? 'office' : 'casual');
 
-      // wave only while in casual hero view; arm rests once dressed up
-      const waveTarget = scrollProg < 0.15
-        ? 2.15 + Math.sin(t * 5.0) * 0.42
-        : 0.0;
-      armR.rotation.z += (waveTarget - armR.rotation.z) * 0.10;
+      // head nod: gentle idle, livelier "talking" bob while on the phone
+      head.position.y = Math.sin(t * 1.4) * 0.018 + Math.sin(t * 2.6) * 0.022 * inContact;
+
+      // walk cycle — legs swing from the hips; mid-flip the knees tuck up to the chest
+      legGroupL.rotation.x = step * 0.38 * walkAmt + tuck * 1.6;
+      legGroupR.rotation.x = -step * 0.38 * walkAmt + tuck * 1.6;
+
+      // ── arm targets ──
+      // Right arm: counter-swings while walking, then lifts the phone up in front of the
+      // eyes in contact (raised higher & less inward than an ear hold, like checking a screen).
+      // Left arm: counter-swings while walking, otherwise rests.
+      // Phone-to-ear pose ramps in on `landed` (after the flip), not during it, so the
+      // arm doesn't reach for the phone mid-air. Mid-flip both arms tuck in (negative x).
+      const phoneRx = -1.95, phoneRz = -0.10;             // forearm up to the SAME-side cheek/ear (no cross-body swing)
+      let aRxTarget = step * 0.30 * walkAmt - tuck * 1.4;
+      let aRzTarget = waveAmt * (2.15 + Math.sin(t * 5.0) * 0.42); // wave at the top
+      aRxTarget = aRxTarget * (1 - landed) + (phoneRx + Math.sin(t * 2.6) * 0.03) * landed;
+      aRzTarget = aRzTarget * (1 - landed) + phoneRz * landed;
+      const aLxTarget = -step * 0.30 * walkAmt - tuck * 1.4;
+
+      sm.aRx += (aRxTarget - sm.aRx) * damp(9);
+      sm.aRz += (aRzTarget - sm.aRz) * damp(9);
+      sm.aLx += (aLxTarget - sm.aLx) * damp(9);
+      armR.rotation.x = sm.aRx; armR.rotation.z = sm.aRz;
+      armL.rotation.x = sm.aLx;
+
+      // head tilts gently toward the phone once landed and on the call
+      sm.headX += ((0.10 * landed) - sm.headX) * damp(9);
+      head.rotation.x = sm.headX;
+
+      phone.visible = landed > 0.02;
 
       renderer.render(scene, camera);
     })();
