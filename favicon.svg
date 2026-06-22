@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- 8-bit voxel head — matches the portfolio's character (sky bg, dark hair, warm skin) -->
+  <rect width="16" height="16" rx="3" fill="#bfe2f4"/>
+  <!-- hair -->
+  <rect x="3" y="2" width="10" height="3" fill="#1a0e08"/>
+  <rect x="2" y="4" width="1" height="3" fill="#1a0e08"/>
+  <rect x="13" y="4" width="1" height="3" fill="#1a0e08"/>
+  <!-- face -->
+  <rect x="3" y="5" width="10" height="7" fill="#cc8055"/>
+  <!-- fringe over the forehead -->
+  <rect x="3" y="5" width="10" height="1" fill="#1a0e08"/>
+  <!-- eyes -->
+  <rect x="5" y="8" width="2" height="2" fill="#1a0e08"/>
+  <rect x="9" y="8" width="2" height="2" fill="#1a0e08"/>
+  <!-- mouth -->
+  <rect x="6" y="11" width="4" height="1" fill="#7a3020"/>
+  <!-- shoulders / shirt -->
+  <rect x="3" y="13" width="10" height="3" fill="#b8b5b0"/>
+  <rect x="7" y="13" width="2" height="3" fill="#d4a840"/>
+</svg>
