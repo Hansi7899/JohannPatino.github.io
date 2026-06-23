@@ -43,10 +43,13 @@
         animation: none;
       }
 
+      /* !important so these beat the later, more-specific rules (e.g. `.intro h2 .blink`)
+         regardless of source order — the looping cursor/bob shouldn't run under reduced motion */
       .blink,
       .blink2,
       .scrollcue {
-        animation: none;
+        animation: none !important;
+        opacity: 1;
       }
     }
 
@@ -74,6 +77,12 @@
       left: 0;
       z-index: 1;
       pointer-events: none;
+      /* Span the LARGE viewport so a retracting mobile URL bar can never reveal a gap of
+         page background below the scene. lvh is stable (doesn't shrink with the toolbar);
+         the buffer is sized to this displayed height in JS so there's no stretch. */
+      width: 100vw;
+      height: 100vh;
+      height: 100lvh;
     }
 
     section {
@@ -89,6 +98,7 @@
     /* ── HERO ── */
     .intro {
       backdrop-filter: blur(1px);
+      -webkit-backdrop-filter: blur(1px);
       max-width: 620px;
       pointer-events: none;
       margin-left: clamp(0rem, 6vw, 6rem);
@@ -156,16 +166,17 @@
 
     .scrollcue {
       position: fixed;
-      bottom: 0.55rem;
+      bottom: 1.7rem;
       left: 50%;
       transform: translateX(-50%);
       z-index: 40;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.25em;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: #5f6573;
-      text-shadow: var(--glow);
+      color: #c98a2e;
+      text-shadow: var(--glow-lg);
       animation: bob 1.8s ease-in-out infinite;
       pointer-events: none;
       transition: opacity 0.45s ease;
@@ -263,6 +274,7 @@
     .cv-card {
       background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 16px;
       padding: 1.6rem 1.8rem;
@@ -472,6 +484,7 @@
         inset 0 0 0 1px rgba(255, 255, 255, 0.04);
       overflow: hidden;
       backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
 
     .term-bar {
@@ -671,6 +684,7 @@
       border: 1px solid rgba(27, 29, 42, 0.18);
       background: rgba(255, 255, 255, 0.75);
       backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: #1b1d2a;
       cursor: pointer;
       box-shadow: 0 2px 12px -4px rgba(40, 50, 90, 0.18);
@@ -1098,10 +1112,23 @@
     camera.position.z = CAM_DIST;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     document.body.appendChild(renderer.domElement);
+    // Cap the pixel ratio lower on phones — a full-screen WebGL canvas at native high-DPI
+    // is a heavy fragment load on mobile; 1.5 stays crisp while easing the GPU.
+    const pixelCap = () => Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2);
+    // Size the drawing buffer to the canvas's DISPLAYED size (CSS spans the large viewport),
+    // with updateStyle=false so the CSS width/height (100vw/100lvh) keeps controlling layout —
+    // this guarantees full coverage on mobile with no stretch. Aspect follows the displayed size.
+    function fitRenderer() {
+      const cw = renderer.domElement.clientWidth || innerWidth;
+      const ch = renderer.domElement.clientHeight || innerHeight;
+      renderer.setPixelRatio(pixelCap());
+      renderer.setSize(cw, ch, false);
+      camera.aspect = cw / ch;
+      camera.updateProjectionMatrix();
+    }
+    fitRenderer();
 
     // soft premium key/fill/rim — warm key + cool fill keeps the airy mood but adds shaping;
     // a cool back-rim separates the character from the soft background (the "premium" tell).
@@ -1399,12 +1426,12 @@
     // THREE mountain layers — far hazy/snowy → mid deeper/snowy → near sage foothills.
     // Taller & crisper now so they rise to fill the mid-background; peaks weighted centre-RIGHT (left stays open).
     const mtns = [
-      layer(0, -58, 210, 27, 0xffffff, 0.85, 0.80,                    // FAR snowy range — bolder now (a real backdrop)
-        mtnTex([[0.10,0.42,0.10],[0.24,0.60,0.12],[0.39,0.50,0.11],[0.52,0.74,0.14],[0.66,0.58,0.12],[0.80,0.86,0.16],[0.92,0.52,0.11],[0.99,0.36,0.08]], '#9fb2d4', '#f1f6fd', 0.80, 0.03)),
-      layer(0, -47, 168, 23, 0xffffff, 0.95, 0.76,                    // MID blue range — the prominent peaks
-        mtnTex([[0.20,0.52,0.12],[0.40,0.80,0.15],[0.60,1.00,0.17],[0.80,0.68,0.14],[0.95,0.46,0.10]], '#6d86b4', '#e6eefa', 0.76, 0.035)),
-      layer(0, -38, 138, 15, 0xffffff, 0.98, 0.70,                    // NEAR foothills (sage, no snow)
-        mtnTex([[0.15,0.36,0.18],[0.40,0.54,0.21],[0.66,0.42,0.20],[0.90,0.48,0.18]], '#67896a', null, 0.70, 0.12)),
+      layer(0, -58, 210, 34, 0xffffff, 0.88, 0.82,                    // FAR snowy range — taller, bolder backdrop
+        mtnTex([[0.10,0.46,0.10],[0.24,0.66,0.12],[0.39,0.55,0.11],[0.52,0.82,0.14],[0.66,0.64,0.12],[0.80,0.95,0.16],[0.92,0.58,0.11],[0.99,0.40,0.08]], '#8ea6cf', '#f1f6fd', 0.82, 0.03)),
+      layer(0, -47, 168, 31, 0xffffff, 0.96, 0.78,                    // MID blue range — the dominant peaks
+        mtnTex([[0.20,0.58,0.12],[0.40,0.88,0.15],[0.60,1.00,0.17],[0.80,0.76,0.14],[0.95,0.52,0.10]], '#5b78ac', '#e6eefa', 0.78, 0.035)),
+      layer(0, -38, 138, 20, 0xffffff, 0.98, 0.70,                    // NEAR foothills (richer sage, no snow)
+        mtnTex([[0.15,0.40,0.18],[0.40,0.60,0.21],[0.66,0.48,0.20],[0.90,0.54,0.18]], '#5a8060', null, 0.70, 0.12)),
     ];
 
     // a thin grass/forest-edge horizon (depth via two faded bands) — a line, never a platform
@@ -1773,8 +1800,25 @@
     const clock = new THREE.Clock();
     let lastT = 0;
     // smoothed limb targets so transitions (e.g. raising the phone) ease in
-    const sm = { aRx: 0, aRz: 0, aLx: 0, aLz: 0, headX: 0 };
+    const sm = { aRx: 0, aRz: 0, aLx: 0, aLz: 0, headX: 0, lookYaw: 0, lookPitch: 0 };
     let flipP = 0;                  // time-based backflip progress (0..1), paced independently of scroll
+
+    // ── look-at-cursor ── normalized pointer position (-1..1); the head turns toward it.
+    // x: -1 left → +1 right, y: -1 top → +1 bottom (screen coords). Centre when the pointer
+    // leaves the window or on touch, so the head eases back to facing forward.
+    const ptr = { x: 0, y: 0 };
+    if (!reduceMo) {
+      window.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'touch') return;               // touch taps shouldn't yank the head around
+        ptr.x = (e.clientX / innerWidth) * 2 - 1;
+        ptr.y = (e.clientY / innerHeight) * 2 - 1;
+      }, { passive: true });
+      document.addEventListener('mouseleave', () => { ptr.x = 0; ptr.y = 0; });
+      window.addEventListener('blur', () => { ptr.x = 0; ptr.y = 0; });
+    }
+    // scratch vectors for the precise look-at math (reused each frame, no per-frame allocation)
+    const _eye = new THREE.Vector3(), _ndc = new THREE.Vector3(), _dir = new THREE.Vector3(),
+          _T = new THREE.Vector3(), _look = new THREE.Vector3(), _q = new THREE.Quaternion();
     (function loop() {
       requestAnimationFrame(loop);
       const t = clock.getElapsedTime();
@@ -1805,7 +1849,7 @@
         [flowers, flowers2].forEach((p, k) => { p.material.opacity = p.userData.op; if (md) { const a = p.geometry.attributes.position, b = p.userData.base; for (let i = 0; i < b.length; i++) a.array[i*3] = b[i].x + Math.sin(t * 0.8 + b[i].ph + k) * 0.06; a.needsUpdate = true; } });
         if (md) grassTufts.forEach((g) => { g.rotation.z = Math.sin(t * 1.3 + g.userData.ph) * 0.07; });   // grass sways in the breeze
         // pollen / fireflies — drift up-and-sideways with a soft collective twinkle
-        { pollen.material.opacity = (0.5 + 0.5 * Math.sin(t * 0.7)) * 0.55 * richness * envFade; if (md) { const a = pollen.geometry.attributes.position, b = pollen.userData.base; for (let i = 0; i < b.length; i++) { a.array[i*3] = b[i].x + Math.sin(t * 0.25 + b[i].ph) * 0.5; a.array[i*3+1] = b[i].y + Math.sin(t * 0.4 + b[i].ph * 1.7) * 0.4; } a.needsUpdate = true; } }
+        { pollen.material.opacity = (md ? (0.5 + 0.5 * Math.sin(t * 0.7)) : 0.7) * 0.55 * richness * envFade; if (md) { const a = pollen.geometry.attributes.position, b = pollen.userData.base; for (let i = 0; i < b.length; i++) { a.array[i*3] = b[i].x + Math.sin(t * 0.25 + b[i].ph) * 0.5; a.array[i*3+1] = b[i].y + Math.sin(t * 0.4 + b[i].ph * 1.7) * 0.4; } a.needsUpdate = true; } }
         // critters (easter eggs): deer idle-bob, rabbit occasional hop, butterfly wander — all slow & subtle
         const critFade = envFade;
         deer.material.opacity = 0.85 * (0.4 + 0.6 * critFade); if (md) deer.position.y = deer.userData.by + Math.sin(t * 0.5) * 0.015;
@@ -1828,7 +1872,7 @@
         butterfly2.material.opacity = (md ? 1 : 0) * 0.85 * (0.3 + 0.7 * critFade); if (md) { butterfly2.position.x = butterfly2.userData.bx + Math.sin(t * 0.43 + 2) * 1.3; butterfly2.position.y = butterfly2.userData.by + Math.sin(t * 0.8 + 1) * 0.45; butterfly2.scale.x = 0.6 + 0.4 * Math.abs(Math.sin(t * 8 + 1.5)); }
         // CAMPFIRE: flame flicker (frame swap + scale), pulsing warm glow, smoke rising & fading
         flame.material.opacity = 0.95 * critFade; if (md) { flame.scale.set(0.9 + 0.18 * Math.sin(t * 11), 0.92 + 0.12 * Math.abs(Math.sin(t * 7)), 1); flame.material.map = flame.userData.frames[(t * 8 | 0) % 3]; }
-        campGlow.material.opacity = critFade * (0.3 + 0.1 * Math.sin(t * 6) + 0.06 * Math.sin(t * 13));
+        campGlow.material.opacity = critFade * (md ? (0.3 + 0.1 * Math.sin(t * 6) + 0.06 * Math.sin(t * 13)) : 0.36);
         person.material.opacity = 0.92 * (0.4 + 0.6 * critFade); if (md) person.position.y = person.userData.by + Math.sin(t * 0.7) * 0.01;
         smoke.material.opacity = 0.4 * critFade; if (md) { const a = smoke.geometry.attributes.position, b = smoke.userData.base; for (let i = 0; i < b.length; i++) { const rise = (t * 0.5 + b[i].ph) % 1.6; a.array[i*3] = b[i].x + Math.sin(t * 0.6 + b[i].ph) * (0.1 + rise * 0.25); a.array[i*3+1] = b[i].y + rise; } a.needsUpdate = true; }
         perched.forEach((bd, i) => { bd.material.opacity = 0.9 * (0.3 + 0.7 * critFade); if (md) bd.position.y = bd.userData.by + (Math.sin(t * 0.5 + i * 2) > 0.97 ? 0.05 : 0); });
@@ -1923,7 +1967,27 @@
 
       // head tilts gently toward the phone once landed and on the call
       sm.headX += ((0.10 * landed) - sm.headX) * damp(9);
-      head.rotation.x = sm.headX;
+
+      // ── look-at-cursor (precise) ── aim the head/eyes at the exact point under the pointer.
+      // Unproject the pointer to a ray from the camera, find where that ray crosses a plane
+      // just in front of the character, then rotate the head to look straight at it (computed
+      // in the body's frame so the aim stays true even as the body idle-sways). Gated to the
+      // hero so it never fights the scroll spin / phone pose.
+      const lookGate = (1 - smoothstep(0.1, 0.55, p));     // full in hero, gone by the Projects spin
+      head.getWorldPosition(_eye);
+      _ndc.set(ptr.x, -ptr.y, 0.5).unproject(camera);
+      _dir.copy(_ndc).sub(camera.position).normalize();
+      const LOOK_PLANE_Z = 2.2;                            // target plane between character (z0) and camera (z6)
+      _T.copy(camera.position).addScaledVector(_dir, (LOOK_PLANE_Z - camera.position.z) / _dir.z);
+      _look.copy(_T).sub(_eye);
+      ch.getWorldQuaternion(_q).invert(); _look.applyQuaternion(_q);   // into the head's parent (ch) frame
+      const clampA = (v, m) => v < -m ? -m : v > m ? m : v;
+      const yawTarget   = clampA(Math.atan2(_look.x, _look.z), 0.85) * lookGate;   // ~49° safety cap
+      const pitchTarget = clampA(Math.atan2(-_look.y, Math.hypot(_look.x, _look.z)), 0.5) * lookGate;
+      sm.lookYaw   += (yawTarget   - sm.lookYaw)   * damp(11);
+      sm.lookPitch += (pitchTarget - sm.lookPitch) * damp(11);
+      head.rotation.y = sm.lookYaw;
+      head.rotation.x = sm.headX + sm.lookPitch;
 
       phone.visible = landed > 0.02;
 
@@ -1931,9 +1995,7 @@
     })();
 
     window.addEventListener('resize', () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
+      fitRenderer();    // re-size buffer + aspect + pixel ratio to the (possibly rotated/resized) displayed canvas
       placeCharacter();
       layoutForest();   // re-scale & re-space the trees so the forest never crowds into a mush on narrow frames
       anchored.forEach((o) => { o.userData.bx = o.userData.fx * vpW(o.userData.az); o.position.x = o.userData.bx; }); // keep critters in-frame on any aspect
