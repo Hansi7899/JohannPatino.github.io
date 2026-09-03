@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="theme-color" content="#1b1d2a">
-  <title>Johann Patiño — Java Developer</title>
+  <title>Johann Patiño — Full-Stack Developer</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -48,7 +48,7 @@
       .blink,
       .blink2,
       .scrollcue {
-        animation: none !important;
+        1 animation: none !important;
         opacity: 1;
       }
     }
@@ -65,8 +65,13 @@
     /* subtle premium film/pixel grain — a tasteful 8-bit-inspired texture at very low opacity */
     body::after {
       content: '';
-      position: fixed; inset: 0; z-index: 50; pointer-events: none;
-      opacity: 0.05; mix-blend-mode: soft-light; image-rendering: pixelated;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.05;
+      mix-blend-mode: soft-light;
+      image-rendering: pixelated;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 140px 140px;
     }
@@ -135,7 +140,7 @@
       color: #b9791f;
       margin-bottom: 1.4rem;
       opacity: 0;
-      /* slightly deeper gold + white glow so "{Java Developer}" stands out on grass */
+      /* slightly deeper gold + white glow so "{Full-Stack Developer}" stands out on grass */
       text-shadow: var(--glow);
       animation: rise 0.8s ease forwards 0.5s;
     }
@@ -233,6 +238,32 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 22px 46px -16px rgba(40, 50, 90, 0.34);
     }
 
+    /* cards that open the project modal get a button role + a small affordance hint on hover/focus */
+    .card--clickable {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card--clickable:focus-visible {
+      outline: 2px solid #c98a2e;
+      outline-offset: 3px;
+    }
+
+    .card--clickable .card-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #b9791f;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .card--clickable:hover .card-hint,
+    .card--clickable:focus-visible .card-hint {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
     .card h3 {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
@@ -263,6 +294,14 @@
       border: 1px solid rgba(59, 111, 181, 0.20);
       padding: 0.25rem 0.7rem;
       border-radius: 999px;
+    }
+
+    .tag--vibecoded {
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #ff5fa2, #ff9d4d 50%, #7c5cff);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 2px 10px -2px rgba(255, 95, 162, 0.5);
     }
 
     /* ── CV ── */
@@ -545,7 +584,9 @@
     /* faint CRT scanlines — subtle retro detail on the terminal only */
     .term-body::after {
       content: '';
-      position: absolute; inset: 0; pointer-events: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
       background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.05) 2px 3px);
     }
 
@@ -670,6 +711,255 @@
       animation: blink 1.1s steps(1) infinite;
     }
 
+    /* ── PROJECT MODAL ── a "bubble" with description, screenshots and links, opened from a project card */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 4vw, 3rem);
+      background: rgba(17, 14, 24, 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      width: min(720px, 100%);
+      max-height: min(82vh, 860px);
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 248, 252, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 30px 70px -20px rgba(20, 15, 35, 0.5);
+      padding: clamp(1.4rem, 4vw, 2.4rem);
+      transform: translateY(18px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      color: #1b1d2a;
+    }
+
+    .modal-close {
+      flex: 0 0 auto;
+      width: 2.1rem;
+      height: 2.1rem;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(27, 29, 42, 0.14);
+      background: rgba(27, 29, 42, 0.04);
+      color: #5a6070;
+      cursor: pointer;
+      transition: background .2s, color .2s, border-color .2s, transform .15s;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus-visible {
+      background: #c98a2e;
+      border-color: #c98a2e;
+      color: #fff;
+      transform: rotate(90deg);
+    }
+
+    .modal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1.3rem;
+    }
+
+    .modal-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.7rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .modal-shot {
+      aspect-ratio: 16 / 10;
+      border-radius: 12px;
+      border: 1px dashed rgba(59, 111, 181, 0.35);
+      background: repeating-linear-gradient(135deg, rgba(59, 111, 181, 0.06) 0 10px, rgba(59, 111, 181, 0.02) 10px 20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      color: #7b8bb0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      text-align: center;
+      padding: 0.6rem;
+      overflow: hidden;
+    }
+
+    .modal-shot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .modal-shot--img {
+      border-style: solid;
+      background: #f4f1ea;
+      padding: 0;
+      cursor: zoom-in;
+    }
+
+    .modal-shot--img img {
+      object-fit: cover;
+      object-position: top;
+    }
+
+    /* ── LIGHTBOX ── full-size screenshot preview, opened from a gallery thumbnail */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 5vw, 4rem);
+      background: rgba(10, 8, 16, 0.82);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+
+    .lightbox-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+      transform: scale(0.96);
+      transition: transform 0.22s cubic-bezier(.2, .8, .2, 1);
+      cursor: zoom-out;
+    }
+
+    .lightbox-overlay.open .lightbox-img {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: clamp(0.8rem, 3vw, 1.6rem);
+      right: clamp(0.8rem, 3vw, 1.6rem);
+      width: 2.4rem;
+      height: 2.4rem;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+
+    .lightbox-close:hover,
+    .lightbox-close:focus-visible {
+      background: #c98a2e;
+      border-color: #c98a2e;
+      transform: rotate(90deg);
+    }
+
+    .modal-shot svg {
+      width: 26px;
+      height: 26px;
+      opacity: 0.6;
+    }
+
+    .modal-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #b07520;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #4a5060;
+      margin-bottom: 1.4rem;
+    }
+
+    .modal-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .modal-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #1b1d2a;
+      text-decoration: none;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(27, 29, 42, 0.16);
+      background: rgba(27, 29, 42, 0.03);
+      transition: background .2s, border-color .2s, color .2s, transform .15s;
+    }
+
+    .modal-link:hover,
+    .modal-link:focus-visible {
+      background: #c98a2e;
+      border-color: #c98a2e;
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .modal-link svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    @media (max-width: 560px) {
+      .modal-gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ── LANG BUTTON ── */
     .lang-btn {
       position: fixed;
@@ -777,7 +1067,8 @@
       }
     }
 
-    @media (max-width: 767px), (max-width: 1023px) and (orientation: portrait) {
+    @media (max-width: 767px),
+    (max-width: 1023px) and (orientation: portrait) {
       section {
         padding-top: 12vh;
         justify-content: flex-end;
@@ -872,9 +1163,9 @@
     <div class="intro">
       <div class="kicker uptext" data-i18n="hero.kicker">Hello, I'm</div>
       <h1>Johann<br>Patiño</h1>
-      <h2>{Java Developer}<span class="blink"></span></h2>
-      <p data-i18n="hero.desc" class="uptext">Backend &amp; full-stack — Spring Boot, SQL, Docker. Based in Vienna,
-        Austria.</p>
+      <h2>{Full-Stack Developer}<span class="blink"></span></h2>
+      <p data-i18n="hero.desc" class="uptext">Full-stack — JavaScript, React, Node.js, and Spring Boot/Java in
+        training. Based in Vienna, Austria.</p>
     </div>
     <div class="scrollcue" data-i18n="hero.scroll">scroll ↓</div>
   </section>
@@ -884,31 +1175,70 @@
         class="brace">}</span></h2>
     <div class="section-sub" data-i18n="projects.sub">// a few things I've built</div>
 
-    <div class="card"><a href="http://mixturalatina.at" target="_blank" rel="noopener noreferrer"
-        style="text-decoration: none; color: inherit;">
-        <h3>MixturaLatina</h3>
-        <p data-i18n="proj1.desc">Designed and built the frontend for a Vienna-based business — responsive,
-          mobile-first, deployed and maintained in production.</p>
-        <div class="tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span>
-        </div>
-      </a></div>
+    <div class="card card--clickable" data-project="mixturalatina" role="button" tabindex="0" aria-haspopup="dialog">
+      <h3>MixturaLatina</h3>
+      <p data-i18n="proj1.desc">Designed and built the frontend for a Vienna-based business — responsive,
+        mobile-first, deployed and maintained in production.</p>
+      <div class="tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span>
+      </div>
+      <div class="card-hint" data-i18n="card.hint">// click for details →</div>
+    </div>
 
-    <div class="card">
+    <div class="card card--clickable" data-project="portfolio" role="button" tabindex="0" aria-haspopup="dialog">
       <h3>8-Bit Portfolio</h3>
       <p data-i18n="proj2.desc">This interactive CV — a voxel character rendered in WebGL that responds to scroll
         and changes outfit for every section.</p>
-      <div class="tags"><span class="tag">Three.js</span><span class="tag">WebGL</span><span
-          class="tag">JavaScript</span></div>
+      <div class="tags"><span class="tag tag--vibecoded" data-i18n="tag.vibecoded">Vibecoded</span><span
+          class="tag">Three.js</span><span class="tag">WebGL</span><span class="tag">JavaScript</span></div>
+      <div class="card-hint" data-i18n="card.hint">// click for details →</div>
     </div>
 
-    <div class="card">
-      <h3>Spring Boot REST API</h3>
-      <p data-i18n="proj3.desc">A backend service with a layered architecture, JPA persistence and containerized
-        deployment.</p>
+    <div class="card card--clickable" data-project="springboot" role="button" tabindex="0" aria-haspopup="dialog">
+      <h3>Deliciousnessness</h3>
+      <p data-i18n="proj3.desc">A multilingual recipe management REST API with full CRUD and search/filter, built
+        with a layered architecture and JPA persistence.</p>
       <div class="tags"><span class="tag">Java</span><span class="tag">Spring Boot</span><span
-          class="tag">SQL</span><span class="tag">Docker</span></div>
+          class="tag">PostgreSQL</span></div>
+      <div class="card-hint" data-i18n="card.hint">// click for details →</div>
     </div>
   </section>
+
+  <div class="modal-overlay" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title" id="modalTitle"></h3>
+        <button class="modal-close" id="modalClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-section-label" data-i18n="modal.about">// about this project</div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-section-label" id="modalWhyLabel" data-i18n="modal.why">// why this project</div>
+      <p class="modal-desc" id="modalWhy"></p>
+      <div class="modal-section-label" id="modalLearnedLabel" data-i18n="modal.learned">// what I learned</div>
+      <p class="modal-desc" id="modalLearned"></p>
+      <div class="modal-section-label" id="modalToolsLabel" data-i18n="modal.tools">// tools &amp; process</div>
+      <p class="modal-desc" id="modalTools"></p>
+      <div class="modal-section-label modal-section-label--gallery" id="modalGalleryLabel"
+        data-i18n="modal.screenshots">// screenshots</div>
+      <div class="modal-gallery" id="modalGallery"></div>
+      <div class="modal-links" id="modalLinks"></div>
+    </div>
+  </div>
+
+  <div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    </button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  </div>
 
   <section class="cv">
     <h2 class="section-title"><span class="brace">{</span> <span data-i18n="cv.title">About Me</span> <span
@@ -918,10 +1248,10 @@
     <div class="cv-card">
 
       <!-- Summary -->
-      <p class="cv-summary" data-i18n="cv.summary"><strong>Software Developer</strong> focused on Java backend and web
-        development. Currently training at <strong>everyonecodes Wien</strong>, with a completed full-stack bootcamp and
-        real-world experience — including a live client website. Eager to keep growing as a software
-        engineer.</p>
+      <p class="cv-summary" data-i18n="cv.summary"><strong>Full-Stack Software Developer</strong> with a completed
+        full-stack bootcamp (JavaScript, React, Node.js) and real-world experience — including a live client
+        website. Currently deepening backend skills at <strong>everyonecodes Wien</strong> with Java and Spring
+        Boot. Eager to keep growing as a software engineer.</p>
 
       <div class="cv-grid">
 
@@ -1003,7 +1333,7 @@
               <div class="tl-item exp-item">
                 <div class="tl-dot"></div>
                 <div class="tl-body">
-                  <div class="tl-role" data-i18n="exp2.role">Waiter / Service Staff</div>
+                  <div class="tl-role" data-i18n="exp2.role">Waiter / Service</div>
                   <div class="tl-org">Liechtenstein Winery · Wien</div>
                   <div class="tl-date">06/2021 — 05/2025</div>
                   <div class="tl-desc" data-i18n="exp2.desc">Customer service, wine tastings, product advice in
@@ -1013,7 +1343,7 @@
               <div class="tl-item exp-item">
                 <div class="tl-dot"></div>
                 <div class="tl-body">
-                  <div class="tl-role" data-i18n="exp3.role">Sales Assistant</div>
+                  <div class="tl-role" data-i18n="exp3.role">Sales Associate</div>
                   <div class="tl-org">VIP Profi Bäckerei · Wien</div>
                   <div class="tl-date">03/2020 — 05/2021</div>
                   <div class="tl-desc" data-i18n="exp3.desc">Sales, customer service, hygiene compliance.</div>
@@ -1022,7 +1352,7 @@
               <div class="tl-item exp-item">
                 <div class="tl-dot"></div>
                 <div class="tl-body">
-                  <div class="tl-role" data-i18n="exp4.role">Waiter / Service Staff</div>
+                  <div class="tl-role" data-i18n="exp4.role">Waiter / Service</div>
                   <div class="tl-org">SAZON Eventcatering &amp; Food Truck · Wien</div>
                   <div class="tl-date">02/2016 — 04/2019</div>
                   <div class="tl-desc" data-i18n="exp4.desc">À la carte service, customer advice, kitchen &amp;
@@ -1055,7 +1385,7 @@
         <div class="gb-prompt"><span class="u">johann@Vienna</span> <span class="m"></span> <span
             class="p">~/contact</span></div>
         <div class="gb-cmd"><span class="dollar">$</span>whoami</div>
-        <div class="term-out" data-i18n="contact.whoami">Johann Patiño · Java Developer · Vienna, AT</div>
+        <div class="term-out" data-i18n="contact.whoami">Johann Patiño · Full-Stack Developer · Vienna, AT</div>
 
         <div class="gb-prompt"><span class="u">johann@Vienna</span> <span class="m"></span> <span
             class="p">~/contact</span></div>
@@ -1415,7 +1745,7 @@
       sg.addColorStop(0, 'rgba(255,240,200,0.55)'); sg.addColorStop(0.45, 'rgba(255,228,170,0.18)'); sg.addColorStop(1, 'rgba(255,228,170,0)');
       x.fillStyle = sg; x.fillRect(0, 0, W, H);
       // very subtle dithering keeps the smooth gradient feeling hand-pixelled, not flat (kept low to avoid grey)
-      const img = x.getImageData(0, 0, W, H); for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() * 2 - 1) * 3; img.data[i]+=n; img.data[i+1]+=n; img.data[i+2]+=n; }
+      const img = x.getImageData(0, 0, W, H); for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() * 2 - 1) * 3; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n; }
       x.putImageData(img, 0, 0);
       const t = new THREE.CanvasTexture(c); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; return t;
     }
@@ -1427,15 +1757,15 @@
     // Taller & crisper now so they rise to fill the mid-background; peaks weighted centre-RIGHT (left stays open).
     const mtns = [
       layer(0, -58, 210, 34, 0xffffff, 0.88, 0.82,                    // FAR snowy range — taller, bolder backdrop
-        mtnTex([[0.10,0.46,0.10],[0.24,0.66,0.12],[0.39,0.55,0.11],[0.52,0.82,0.14],[0.66,0.64,0.12],[0.80,0.95,0.16],[0.92,0.58,0.11],[0.99,0.40,0.08]], '#8ea6cf', '#f1f6fd', 0.82, 0.03)),
+        mtnTex([[0.10, 0.46, 0.10], [0.24, 0.66, 0.12], [0.39, 0.55, 0.11], [0.52, 0.82, 0.14], [0.66, 0.64, 0.12], [0.80, 0.95, 0.16], [0.92, 0.58, 0.11], [0.99, 0.40, 0.08]], '#8ea6cf', '#f1f6fd', 0.82, 0.03)),
       layer(0, -47, 168, 31, 0xffffff, 0.96, 0.78,                    // MID blue range — the dominant peaks
-        mtnTex([[0.20,0.58,0.12],[0.40,0.88,0.15],[0.60,1.00,0.17],[0.80,0.76,0.14],[0.95,0.52,0.10]], '#5b78ac', '#e6eefa', 0.78, 0.035)),
+        mtnTex([[0.20, 0.58, 0.12], [0.40, 0.88, 0.15], [0.60, 1.00, 0.17], [0.80, 0.76, 0.14], [0.95, 0.52, 0.10]], '#5b78ac', '#e6eefa', 0.78, 0.035)),
       layer(0, -38, 138, 20, 0xffffff, 0.98, 0.70,                    // NEAR foothills (richer sage, no snow)
-        mtnTex([[0.15,0.40,0.18],[0.40,0.60,0.21],[0.66,0.48,0.20],[0.90,0.54,0.18]], '#5a8060', null, 0.70, 0.12)),
+        mtnTex([[0.15, 0.40, 0.18], [0.40, 0.60, 0.21], [0.66, 0.48, 0.20], [0.90, 0.54, 0.18]], '#5a8060', null, 0.70, 0.12)),
     ];
 
     // a thin grass/forest-edge horizon (depth via two faded bands) — a line, never a platform
-    const flatTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 4; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,4,4); return new THREE.CanvasTexture(c); })();
+    const flatTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 4; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 4, 4); return new THREE.CanvasTexture(c); })();
     const land = [
       layer(0, -30, 200, 2.6, 0x7c9a64, 0.7, 0.5, flatTex),   // far grass edge (crisper than before)
       layer(0, -22, 200, 2.0, 0x6c8d56, 0.82, 0.5, flatTex),  // near grass edge (closer + deeper green)
@@ -1448,7 +1778,7 @@
       g.addColorStop(0, 'rgba(122,152,90,0)'); g.addColorStop(0.06, 'rgba(116,146,84,1)');
       g.addColorStop(0.5, 'rgba(98,130,72,1)'); g.addColorStop(1, 'rgba(84,116,62,1)');
       x.fillStyle = g; x.fillRect(0, 0, W, H);
-      const B = 18, img = x.getImageData(0, 0, W, H); for (let yy=0; yy<H; yy++){ const src=(Math.floor(yy/H*B)+0.5)/B*H|0; for(let xx=0;xx<W;xx++) for(let k=0;k<4;k++) img.data[(yy*W+xx)*4+k]=img.data[(Math.min(H-1,src)*W+xx)*4+k]; } x.putImageData(img,0,0);
+      const B = 18, img = x.getImageData(0, 0, W, H); for (let yy = 0; yy < H; yy++) { const src = (Math.floor(yy / H * B) + 0.5) / B * H | 0; for (let xx = 0; xx < W; xx++) for (let k = 0; k < 4; k++) img.data[(yy * W + xx) * 4 + k] = img.data[(Math.min(H - 1, src) * W + xx) * 4 + k]; } x.putImageData(img, 0, 0);
       const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; return t;
     })();
     // sized so the SOLID grass (not the thin top fade) fills the whole visible bottom of the frame
@@ -1462,8 +1792,8 @@
     // so every pointed crown sits fully inside the viewport; trunks meet the ground at the horizon.
     const trees = [];   // userData: op, bx, sway
     // depth palettes → atmospheric perspective (far = lighter/hazier, near = darker/richer)
-    const farTex  = [pineTex(11, '#6f8c7d', '#62826f', '#577763'), pineTex(12, '#728f80', '#648472', '#597a66')];
-    const midTex  = [pineTex(13, '#3f6248', '#34553c', '#264430'), pineTex(14, '#446848', '#395b3d', '#284733')];
+    const farTex = [pineTex(11, '#6f8c7d', '#62826f', '#577763'), pineTex(12, '#728f80', '#648472', '#597a66')];
+    const midTex = [pineTex(13, '#3f6248', '#34553c', '#264430'), pineTex(14, '#446848', '#395b3d', '#284733')];
     const nearTex = [pineTex(15, '#2d4e36', '#26452e', '#163020'), pineTex(16, '#294a31', '#214027', '#13291b')];
     // The forest is authored for a landscape frame (REF_ASPECT). On a NARROWER frame the
     // vertical fov is unchanged, so trees would keep their full height while the frame got
@@ -1493,16 +1823,16 @@
     }
     // BACKGROUND — small hazy pines, scattered with gaps; centre is left OPEN (the clearing)
     pine(-13, -30, 0.30, farTex[0], 0.78, 0.003); pine(-10, -31, 0.35, farTex[1], 0.76, 0.003);
-    pine(-7,  -29, 0.27, farTex[1], 0.74, 0.003); pine( 8,  -30, 0.33, farTex[0], 0.78, 0.003);
-    pine( 11, -31, 0.29, farTex[1], 0.76, 0.003); pine( 15, -29, 0.37, farTex[0], 0.80, 0.003);
+    pine(-7, -29, 0.27, farTex[1], 0.74, 0.003); pine(8, -30, 0.33, farTex[0], 0.78, 0.003);
+    pine(11, -31, 0.29, farTex[1], 0.76, 0.003); pine(15, -29, 0.37, farTex[0], 0.80, 0.003);
     // MIDGROUND — a few medium trees, still clearly spaced
-    pine(-8,  -22, 0.47, midTex[0], 0.95, 0.006); pine( 10, -21, 0.55, midTex[1], 0.96, 0.007);
-    pine( 14, -22, 0.45, midTex[0], 0.95, 0.006);
+    pine(-8, -22, 0.47, midTex[0], 0.95, 0.006); pine(10, -21, 0.55, midTex[1], 0.96, 0.007);
+    pine(14, -22, 0.45, midTex[0], 0.95, 0.006);
     // FOREGROUND — tall dark pines at the SIDES, anchored to the edges (they run off the frame edges,
     // but their pointed tops stay inside it). Centre stays clear.
     pine(0, -13, 0.84, nearTex[0], 0.98, 0.012, -1.02);  // left edge
-    pine(0, -12, 0.90, nearTex[1], 0.98, 0.014,  0.90);  // right edge
-    pine(0, -11, 0.76, nearTex[0], 0.98, 0.013,  1.18);  // far-right, mostly off-frame
+    pine(0, -12, 0.90, nearTex[1], 0.98, 0.014, 0.90);  // right edge
+    pine(0, -11, 0.76, nearTex[0], 0.98, 0.013, 1.18);  // far-right, mostly off-frame
 
     // ── FOREGROUND DETAILS: a few deliberately-placed pixel props (rocks, mushrooms, log, ferns) ──
     // Small, low, sat in the near grass; spread to the sides so the centre stays open for the character.
@@ -1512,23 +1842,23 @@
         new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false, fog: false }));
       m.position.set(x, HORIZON + h / 2 - 0.08 * h, z); m.userData.bx = x; props.push(m); env.add(m); return m;
     }
-    const rockTex = critTex(20, 14, (x) => { x.fillStyle = '#8b8f99'; x.fillRect(3,5,14,8); x.fillRect(5,3,9,3); x.fillStyle = '#6f737d'; x.fillRect(3,11,14,2); x.fillStyle = '#a6aab3'; x.fillRect(6,4,5,2); });
-    const logTex  = critTex(26, 12, (x) => { x.fillStyle = '#6e4a30'; x.fillRect(1,4,24,6); x.fillStyle = '#5a3b25'; x.fillRect(1,8,24,2); x.fillStyle = '#8a6038'; x.beginPath(); x.arc(24,7,3,0,6.283); x.fill(); x.fillStyle = '#b58a52'; x.fillRect(23,6,2,2); });
-    const fernTex = critTex(16, 18, (x) => { x.fillStyle = '#4d7a44'; for (let i=0;i<5;i++){ const a=(i-2)*0.5; x.save(); x.translate(8,16); x.rotate(a); x.fillRect(-1,-14,2,14); x.restore(); } });
+    const rockTex = critTex(20, 14, (x) => { x.fillStyle = '#8b8f99'; x.fillRect(3, 5, 14, 8); x.fillRect(5, 3, 9, 3); x.fillStyle = '#6f737d'; x.fillRect(3, 11, 14, 2); x.fillStyle = '#a6aab3'; x.fillRect(6, 4, 5, 2); });
+    const logTex = critTex(26, 12, (x) => { x.fillStyle = '#6e4a30'; x.fillRect(1, 4, 24, 6); x.fillStyle = '#5a3b25'; x.fillRect(1, 8, 24, 2); x.fillStyle = '#8a6038'; x.beginPath(); x.arc(24, 7, 3, 0, 6.283); x.fill(); x.fillStyle = '#b58a52'; x.fillRect(23, 6, 2, 2); });
+    const fernTex = critTex(16, 18, (x) => { x.fillStyle = '#4d7a44'; for (let i = 0; i < 5; i++) { const a = (i - 2) * 0.5; x.save(); x.translate(8, 16); x.rotate(a); x.fillRect(-1, -14, 2, 14); x.restore(); } });
     prop(rockTex, 0.9, 0.63, -12, -10);
     prop(fernTex, 0.7, 0.79, -9, -9.5);
-    prop(logTex,  1.3, 0.6,  12, -10);
-    prop(rockTex, 0.7, 0.49,  16, -10.5);
-    prop(fernTex, 0.6, 0.68,  8.5, -8.6);
+    prop(logTex, 1.3, 0.6, 12, -10);
+    prop(rockTex, 0.7, 0.49, 16, -10.5);
+    prop(fernTex, 0.6, 0.68, 8.5, -8.6);
 
     // ── MUSHROOMS — simple, realistic: white stem + brown cap, in small groups near the grass edge ──
     const mushTex = critTex(14, 14, (x) => {
-      x.fillStyle = '#e8e1d0'; x.fillRect(5,7,4,6);                       // pale stem
-      x.fillStyle = '#955a3a'; x.fillRect(2,4,10,3); x.fillRect(4,3,6,1); // brown cap
-      x.fillStyle = '#7a4630'; x.fillRect(2,6,10,1);                      // cap underside shade
+      x.fillStyle = '#e8e1d0'; x.fillRect(5, 7, 4, 6);                       // pale stem
+      x.fillStyle = '#955a3a'; x.fillRect(2, 4, 10, 3); x.fillRect(4, 3, 6, 1); // brown cap
+      x.fillStyle = '#7a4630'; x.fillRect(2, 6, 10, 1);                      // cap underside shade
     });
     function mushroomGroup(cx, z) {
-      [[-0.5,0.40],[-0.18,0.30],[0.12,0.46],[0.42,0.34],[0.66,0.26]].forEach((d) => prop(mushTex, d[1], d[1], cx + d[0], z));
+      [[-0.5, 0.40], [-0.18, 0.30], [0.12, 0.46], [0.42, 0.34], [0.66, 0.26]].forEach((d) => prop(mushTex, d[1], d[1], cx + d[0], z));
     }
     mushroomGroup(-7, -10);    // left group (by the bunny's clearing edge)
     mushroomGroup(13, -10.5);  // right group (near the forest edge)
@@ -1536,7 +1866,7 @@
     // ── NEAR vegetation: small grass tufts + a sprinkle of flowers (crisp, close to the horizon) ──
     function makePts(n, spreadX, x0, yBase, yJit, z0, zJit, color, size, op) {
       const g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), base = [];
-      for (let i = 0; i < n; i++) { const x = x0 + Math.random() * spreadX, y = yBase + Math.random() * yJit, z = z0 - Math.random() * zJit; pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z; base.push({ x, y, ph: Math.random() * 6.28 }); }
+      for (let i = 0; i < n; i++) { const x = x0 + Math.random() * spreadX, y = yBase + Math.random() * yJit, z = z0 - Math.random() * zJit; pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z; base.push({ x, y, ph: Math.random() * 6.28 }); }
       g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       const p = new THREE.Points(g, new THREE.PointsMaterial({ color, size, sizeAttenuation: true, transparent: true, opacity: op, depthWrite: false }));
       p.userData.base = base; p.userData.op = op; env.add(p); return p;
@@ -1569,8 +1899,8 @@
         m.position.set(x, y, z); m.userData.ph = Math.random() * 6.28; grassTufts.push(m); env.add(m);
       }
     })();
-    const flowers   = makePts(reduceMo ? 10 : 22, 36, -14, HORIZON + 0.14, 0.4, -9, 9, 0xffd166, 0.17, 0.95);
-    const flowers2  = makePts(reduceMo ? 8 : 15, 30, -11, HORIZON + 0.16, 0.34, -9, 8, 0xef8fb6, 0.16, 0.92);
+    const flowers = makePts(reduceMo ? 10 : 22, 36, -14, HORIZON + 0.14, 0.4, -9, 9, 0xffd166, 0.17, 0.95);
+    const flowers2 = makePts(reduceMo ? 8 : 15, 30, -11, HORIZON + 0.16, 0.34, -9, 8, 0xef8fb6, 0.16, 0.92);
 
     // slow drifting pollen / fireflies near the forest (additive, gentle twinkle)
     const pollen = makePts(reduceMo ? 14 : 30, 32, -13, HORIZON + 0.4, 2.4, -11, 9, 0xe6f4b4, 0.085, 0);
@@ -1583,51 +1913,61 @@
       m.position.set(x, y, z); m.userData.bx = x; m.userData.by = y; env.add(m); return m;
     }
     // deer silhouette (side view) standing between the trees
-    const deerTex = critTex(44, 34, (x) => { x.fillStyle = '#2c3a2a';
-      x.fillRect(8,16,20,8);  x.fillRect(24,9,5,9);  x.fillRect(27,5,8,5);  x.fillRect(34,7,5,3);          // body, neck, head, snout
-      x.fillRect(28,0,2,5); x.fillRect(31,0,2,5); x.fillRect(26,1,2,4); x.fillRect(33,1,2,4);              // antlers
-      x.fillRect(10,24,2,9); x.fillRect(15,24,2,9); x.fillRect(22,24,2,9); x.fillRect(26,24,2,10);          // legs
-      x.fillRect(6,16,2,4); });                                                                            // tail
+    const deerTex = critTex(44, 34, (x) => {
+      x.fillStyle = '#2c3a2a';
+      x.fillRect(8, 16, 20, 8); x.fillRect(24, 9, 5, 9); x.fillRect(27, 5, 8, 5); x.fillRect(34, 7, 5, 3);          // body, neck, head, snout
+      x.fillRect(28, 0, 2, 5); x.fillRect(31, 0, 2, 5); x.fillRect(26, 1, 2, 4); x.fillRect(33, 1, 2, 4);              // antlers
+      x.fillRect(10, 24, 2, 9); x.fillRect(15, 24, 2, 9); x.fillRect(22, 24, 2, 9); x.fillRect(26, 24, 2, 10);          // legs
+      x.fillRect(6, 16, 2, 4);
+    });                                                                            // tail
     const deer = critter(deerTex, 1.5, 1.16, 0, HORIZON + 0.57, -16.5, 0.9);
     anchorX(deer, 0.30, -16.5);   // ALWAYS the right-middle clearing (viewport-relative)
     // rabbit near the grass
-    const rabbitTex = critTex(26, 24, (x) => { x.fillStyle = '#6b6357';
-      x.fillRect(5,13,11,7); x.fillRect(14,9,6,6); x.fillRect(15,2,2,8); x.fillRect(18,2,2,8);             // body, head, ears
-      x.fillRect(5,19,5,2); x.fillRect(12,19,5,2); x.fillRect(3,14,2,3); });                                // feet, tail
+    const rabbitTex = critTex(26, 24, (x) => {
+      x.fillStyle = '#6b6357';
+      x.fillRect(5, 13, 11, 7); x.fillRect(14, 9, 6, 6); x.fillRect(15, 2, 2, 8); x.fillRect(18, 2, 2, 8);             // body, head, ears
+      x.fillRect(5, 19, 5, 2); x.fillRect(12, 19, 5, 2); x.fillRect(3, 14, 2, 3);
+    });                                // feet, tail
     const rabbit = critter(rabbitTex, 0.72, 0.66, 0, HORIZON + 0.31, -10, 0.92);
     anchorX(rabbit, -0.34, -10);  // ALWAYS the left/lower clearing (viewport-relative)
     rabbit.userData.hx = 0; rabbit.userData.dir = 1; rabbit.userData.ht = 0; rabbit.userData.restT = 1.0; rabbit.userData.hopping = false; rabbit.userData.hopT = 0;
     // a small butterfly (warm) that wanders near the flowers
-    const flyTex = critTex(18, 14, (x) => { x.fillStyle = '#e8923a';
-      x.fillRect(2,3,5,4); x.fillRect(2,8,5,3); x.fillRect(11,3,5,4); x.fillRect(11,8,5,3);                 // 4 wings
-      x.fillStyle = '#3a2a1c'; x.fillRect(8,4,2,7); });                                                    // body
+    const flyTex = critTex(18, 14, (x) => {
+      x.fillStyle = '#e8923a';
+      x.fillRect(2, 3, 5, 4); x.fillRect(2, 8, 5, 3); x.fillRect(11, 3, 5, 4); x.fillRect(11, 8, 5, 3);                 // 4 wings
+      x.fillStyle = '#3a2a1c'; x.fillRect(8, 4, 2, 7);
+    });                                                    // body
     const butterfly = critter(flyTex, 0.4, 0.32, 2, HORIZON + 1.0, -9.5, 0);
 
     // soft radial sprite (still used by the sun-glow)
-    function softTex(){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
-      const g=x.createRadialGradient(32,32,2,32,32,31); g.addColorStop(0,'rgba(255,255,255,0.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
-      x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
+    function softTex() {
+      const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+      const g = x.createRadialGradient(32, 32, 2, 32, 32, 31); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
+    }
 
     // chunky 8-bit cloud — overlapping pixel puffs over a flat base (NearestFilter = blocky edges)
-    function pixCloudTex(seed){
-      const W=80,H=44,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
-      const rnd=(n)=>{const v=Math.sin((seed+1)*53.3+n*19.7)*43758.5453; return v-Math.floor(v);};
-      x.fillStyle='rgba(255,255,255,0.96)';
-      const puffs=5+Math.floor(rnd(0)*3);
-      for(let i=0;i<puffs;i++){ const px=12+rnd(i)*(W-24), py=15+rnd(i+5)*9, r=8+rnd(i+9)*10; x.beginPath(); x.arc(px,py,r,0,6.283); x.fill(); }
-      x.fillRect(10,23,W-20,12);
-      x.fillStyle='rgba(206,228,245,0.6)'; x.fillRect(10,31,W-20,4);     // cool light-blue underside (day sky, separates cloud from sky)
-      const t=new THREE.CanvasTexture(c); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t;
+    function pixCloudTex(seed) {
+      const W = 80, H = 44, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+      const rnd = (n) => { const v = Math.sin((seed + 1) * 53.3 + n * 19.7) * 43758.5453; return v - Math.floor(v); };
+      x.fillStyle = 'rgba(255,255,255,0.96)';
+      const puffs = 5 + Math.floor(rnd(0) * 3);
+      for (let i = 0; i < puffs; i++) { const px = 12 + rnd(i) * (W - 24), py = 15 + rnd(i + 5) * 9, r = 8 + rnd(i + 9) * 10; x.beginPath(); x.arc(px, py, r, 0, 6.283); x.fill(); }
+      x.fillRect(10, 23, W - 20, 12);
+      x.fillStyle = 'rgba(206,228,245,0.6)'; x.fillRect(10, 31, W - 20, 4);     // cool light-blue underside (day sky, separates cloud from sky)
+      const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; return t;
     }
-    const cloudTexs=[pixCloudTex(1),pixCloudTex(2),pixCloudTex(3),pixCloudTex(4),pixCloudTex(5)];
+    const cloudTexs = [pixCloudTex(1), pixCloudTex(2), pixCloudTex(3), pixCloudTex(4), pixCloudTex(5)];
     // layered for depth: big near-ish clouds + smaller higher distant ones, spread across the whole sky
     const clouds = [];
-    const cloudDefs=[ // [x, y, z, w, h, opacity, speed] — a sparse few, spread for depth
-      [-28, 9, -52, 22, 10, 0.85, 0.10], [ 20, 11, -50, 24, 11, 0.88, 0.10],
-      [ 36, 16, -60, 14, 7, 0.58, 0.07], [-18, 18, -62, 12, 6, 0.5, 0.06], [ 4, 8, -48, 18, 8.5, 0.8, 0.11] ];
-    cloudDefs.forEach((d,i)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(d[3],d[4]),
-      new THREE.MeshBasicMaterial({ map: cloudTexs[i%cloudTexs.length], transparent:true, opacity:d[5], depthWrite:false, fog:false }));
-      m.position.set(d[0],d[1],d[2]); m.userData.sp=d[6]; m.userData.op=d[5]; clouds.push(m); env.add(m); });
+    const cloudDefs = [ // [x, y, z, w, h, opacity, speed] — a sparse few, spread for depth
+      [-28, 9, -52, 22, 10, 0.85, 0.10], [20, 11, -50, 24, 11, 0.88, 0.10],
+      [36, 16, -60, 14, 7, 0.58, 0.07], [-18, 18, -62, 12, 6, 0.5, 0.06], [4, 8, -48, 18, 8.5, 0.8, 0.11]];
+    cloudDefs.forEach((d, i) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(d[3], d[4]),
+        new THREE.MeshBasicMaterial({ map: cloudTexs[i % cloudTexs.length], transparent: true, opacity: d[5], depthWrite: false, fog: false }));
+      m.position.set(d[0], d[1], d[2]); m.userData.sp = d[6]; m.userData.op = d[5]; clouds.push(m); env.add(m);
+    });
 
     // soft ATMOSPHERIC HAZE band low across the horizon (additive) — blends mountains/forest into the sky
     const haze = new THREE.Mesh(new THREE.PlaneGeometry(170, 14), new THREE.MeshBasicMaterial({ map: softTex(), color: 0xd2e6f4, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
@@ -1635,18 +1975,20 @@
 
     // floating warm motes (around/behind the character)
     const MN = reduceMo ? 40 : 95, moteGeo = new THREE.BufferGeometry(), mpos = new Float32Array(MN * 3), mbase = [];
-    for (let i = 0; i < MN; i++) { const x=-7+Math.random()*15, y=-2.5+Math.random()*6.5, z=-3-Math.random()*13; mpos[i*3]=x;mpos[i*3+1]=y;mpos[i*3+2]=z; mbase.push({x,y,ph:Math.random()*6.28}); }
+    for (let i = 0; i < MN; i++) { const x = -7 + Math.random() * 15, y = -2.5 + Math.random() * 6.5, z = -3 - Math.random() * 13; mpos[i * 3] = x; mpos[i * 3 + 1] = y; mpos[i * 3 + 2] = z; mbase.push({ x, y, ph: Math.random() * 6.28 }); }
     moteGeo.setAttribute('position', new THREE.BufferAttribute(mpos, 3));
     const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xffe6b8, size: 0.075, sizeAttenuation: true, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
     env.add(motes);
 
     // birds at DIFFERENT distances (varied size/depth/height) — they cross the sky periodically
     const birds = [];
-    function bird(i){ const g=new THREE.Group(); const col=0x4a5170;
-      const w1=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.04,0.16),lam(col)), w2=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.04,0.16),lam(col));
-      w1.position.x=-0.27; w2.position.x=0.27; g.add(w1,w2); g.scale.setScalar(1.15 - i*0.12);
-      g.userData={ w1, w2, t:i*4, z:-20 - i*5, yb:6 + (i%3)*1.7, sp:1.6 + (i%3)*0.5, ph:i*1.3 }; g.visible=false; env.add(g); birds.push(g); }
-    for (let i=0;i<5;i++) bird(i);
+    function bird(i) {
+      const g = new THREE.Group(); const col = 0x4a5170;
+      const w1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.16), lam(col)), w2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.16), lam(col));
+      w1.position.x = -0.27; w2.position.x = 0.27; g.add(w1, w2); g.scale.setScalar(1.15 - i * 0.12);
+      g.userData = { w1, w2, t: i * 4, z: -20 - i * 5, yb: 6 + (i % 3) * 1.7, sp: 1.6 + (i % 3) * 0.5, ph: i * 1.3 }; g.visible = false; env.add(g); birds.push(g);
+    }
+    for (let i = 0; i < 5; i++) bird(i);
 
     // soft warm SUN-GLOW (big, high on the warm right side, additive) — anchors the sky's light
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshBasicMaterial({ map: softTex(), color: 0xffdcab, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
@@ -1654,15 +1996,20 @@
 
     // ── CAMPFIRE + a small person (a storytelling easter egg, off to one side of the clearing) ──
     const campX = 0.5, campZ = -15, campY = HORIZON;   // open clearing between the text and the character (clear of the UI)
-    const logsTex = critTex(22, 10, (x) => { x.fillStyle = '#4a3322';
-      x.save(); x.translate(11,6); x.rotate(0.5); x.fillRect(-9,-1,18,3); x.restore();
-      x.save(); x.translate(11,6); x.rotate(-0.5); x.fillRect(-9,-1,18,3); x.restore(); });
+    const logsTex = critTex(22, 10, (x) => {
+      x.fillStyle = '#4a3322';
+      x.save(); x.translate(11, 6); x.rotate(0.5); x.fillRect(-9, -1, 18, 3); x.restore();
+      x.save(); x.translate(11, 6); x.rotate(-0.5); x.fillRect(-9, -1, 18, 3); x.restore();
+    });
     critter(logsTex, 0.95, 0.43, campX, campY + 0.16, campZ, 0.95);
-    function flameTex(seed){ return critTex(16, 22, (x) => {
-      const rnd=(n)=>{const v=Math.sin((seed+1)*41.1+n*13.7)*43758.5; return v-Math.floor(v);};
-      x.fillStyle='#e8662a'; x.beginPath(); x.moveTo(8,2+rnd(0)*3); x.lineTo(13,17); x.lineTo(3,17); x.closePath(); x.fill();   // outer orange
-      x.fillStyle='#f6c64a'; x.beginPath(); x.moveTo(8,8+rnd(1)*2); x.lineTo(11,17); x.lineTo(5,17); x.closePath(); x.fill();   // inner yellow
-      x.fillStyle='#f29a3a'; x.fillRect(4,15,8,4); }); }                                                                        // glowing base
+    function flameTex(seed) {
+      return critTex(16, 22, (x) => {
+        const rnd = (n) => { const v = Math.sin((seed + 1) * 41.1 + n * 13.7) * 43758.5; return v - Math.floor(v); };
+        x.fillStyle = '#e8662a'; x.beginPath(); x.moveTo(8, 2 + rnd(0) * 3); x.lineTo(13, 17); x.lineTo(3, 17); x.closePath(); x.fill();   // outer orange
+        x.fillStyle = '#f6c64a'; x.beginPath(); x.moveTo(8, 8 + rnd(1) * 2); x.lineTo(11, 17); x.lineTo(5, 17); x.closePath(); x.fill();   // inner yellow
+        x.fillStyle = '#f29a3a'; x.fillRect(4, 15, 8, 4);
+      });
+    }                                                                        // glowing base
     const flame = critter(flameTex(1), 0.5, 0.68, campX, campY + 0.43, campZ, 0.95);
     flame.userData.frames = [flameTex(1), flameTex(2), flameTex(3)];
     const campGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: softTex(), color: 0xff9a3c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
@@ -1670,19 +2017,20 @@
     const smoke = makePts(reduceMo ? 6 : 14, 0.7, campX - 0.35, campY + 0.9, 1.6, campZ, 0.5, 0xbcc0bd, 0.11, 0); // rises + fades in loop
     // a cozy seated camper — a simple DARK SILHOUETTE (same style as the deer): sitting on the ground,
     // knees raised, leaning toward the fire on its right. Readable head / body / arm / legs.
-    const personTex = critTex(18, 22, (x) => { x.fillStyle = '#24272f';
-      x.fillRect(4,3,5,5);                         // head
-      x.fillRect(4,8,6,8);                          // torso (leaning toward the fire)
-      x.fillRect(9,9,5,2); x.fillRect(12,10,2,5);   // arm + forearm toward the flames
-      x.fillRect(3,15,7,3);                         // seat on the ground
-      x.fillRect(9,12,3,5);                         // raised knee (thigh up)
-      x.fillRect(11,16,4,2);                        // lower leg / foot to the ground
+    const personTex = critTex(18, 22, (x) => {
+      x.fillStyle = '#24272f';
+      x.fillRect(4, 3, 5, 5);                         // head
+      x.fillRect(4, 8, 6, 8);                          // torso (leaning toward the fire)
+      x.fillRect(9, 9, 5, 2); x.fillRect(12, 10, 2, 5);   // arm + forearm toward the flames
+      x.fillRect(3, 15, 7, 3);                         // seat on the ground
+      x.fillRect(9, 12, 3, 5);                         // raised knee (thigh up)
+      x.fillRect(11, 16, 4, 2);                        // lower leg / foot to the ground
     });
     const person = critter(personTex, 0.58, 0.7, campX - 1.1, campY + 0.33, campZ, 0.92);
 
     // a couple of birds PERCHED on the closer tree crowns (tiny, mostly still — occasional flutter)
-    const perchTex = critTex(8, 6, (x) => { x.fillStyle = '#2f3346'; x.fillRect(3,1,2,4); x.fillRect(1,2,6,2); });
-    const perched = [ critter(perchTex, 0.22, 0.17, 8.4, HORIZON + 5.6, -19, 0.9), critter(perchTex, 0.2, 0.15, -5.5, HORIZON + 4.6, -20, 0.85) ];
+    const perchTex = critTex(8, 6, (x) => { x.fillStyle = '#2f3346'; x.fillRect(3, 1, 2, 4); x.fillRect(1, 2, 6, 2); });
+    const perched = [critter(perchTex, 0.22, 0.17, 8.4, HORIZON + 5.6, -19, 0.9), critter(perchTex, 0.2, 0.15, -5.5, HORIZON + 4.6, -20, 0.85)];
     // a second butterfly near the other flower patch
     const butterfly2 = critter(flyTex, 0.34, 0.27, -9, HORIZON + 0.9, -9, 0);
 
@@ -1734,7 +2082,7 @@
         // Only (re)compute the endpoints here — the loop owns base.x/y and ch.scale and
         // interpolates them every frame from scroll. Snapping them here would cause a
         // one-frame "pop" whenever a mid-scroll resize fires (e.g. mobile URL-bar show/hide).
-        mobHero.x = halfW * 0.0529;  mobHero.y = halfH * 0.2859;
+        mobHero.x = halfW * 0.0529; mobHero.y = halfH * 0.2859;
         mobScroll.x = halfW * -0.6141; mobScroll.y = halfH * 0.5082;
 
         // Where are the shrunk character's feet on screen? (camera looks straight down -Z,
@@ -1818,7 +2166,7 @@
     }
     // scratch vectors for the precise look-at math (reused each frame, no per-frame allocation)
     const _eye = new THREE.Vector3(), _ndc = new THREE.Vector3(), _dir = new THREE.Vector3(),
-          _T = new THREE.Vector3(), _look = new THREE.Vector3(), _q = new THREE.Quaternion();
+      _T = new THREE.Vector3(), _look = new THREE.Vector3(), _q = new THREE.Quaternion();
     (function loop() {
       requestAnimationFrame(loop);
       const t = clock.getElapsedTime();
@@ -1838,7 +2186,7 @@
         const envFade = 1;    // background stays fully opaque in EVERY section (no scroll-based transparency)
         const md = reduceMo ? 0 : 1;                                                   // motion gate
         motes.material.opacity = 0.55 * richness * envFade;
-        if (md) { const a = motes.geometry.attributes.position; for (let i = 0; i < MN; i++) { const b = mbase[i]; a.array[i*3]=b.x+Math.sin(t*0.3+b.ph)*0.3; a.array[i*3+1]=b.y+Math.sin(t*0.5+b.ph)*0.35; } a.needsUpdate = true; }
+        if (md) { const a = motes.geometry.attributes.position; for (let i = 0; i < MN; i++) { const b = mbase[i]; a.array[i * 3] = b.x + Math.sin(t * 0.3 + b.ph) * 0.3; a.array[i * 3 + 1] = b.y + Math.sin(t * 0.5 + b.ph) * 0.35; } a.needsUpdate = true; }
         clouds.forEach((c) => { c.position.x += delta * c.userData.sp * md; if (c.position.x > 44) c.position.x = -44; c.material.opacity = c.userData.op * (0.7 + 0.3 * envFade); });
         // landscape layers — recede in Contact so the terminal leads; mountains stay rock-steady (a real range)
         mtns.forEach((s) => { s.material.opacity = s.userData.op * (0.62 + 0.38 * envFade); });
@@ -1846,23 +2194,26 @@
         // forest: full opacity (crisp, not hazy) + gentle treetop sway (closer groups sway a touch more)
         trees.forEach((g, i) => { g.material.opacity = g.userData.op * (0.6 + 0.4 * envFade); if (md) { g.position.x = g.userData.bx + Math.sin(t * 0.5 + i) * (g.userData.sway * 3); g.rotation.z = Math.sin(t * 0.6 + i * 1.3) * g.userData.sway; } });
         // near vegetation — crisp; a slow grass/flower sway near the horizon
-        [flowers, flowers2].forEach((p, k) => { p.material.opacity = p.userData.op; if (md) { const a = p.geometry.attributes.position, b = p.userData.base; for (let i = 0; i < b.length; i++) a.array[i*3] = b[i].x + Math.sin(t * 0.8 + b[i].ph + k) * 0.06; a.needsUpdate = true; } });
+        [flowers, flowers2].forEach((p, k) => { p.material.opacity = p.userData.op; if (md) { const a = p.geometry.attributes.position, b = p.userData.base; for (let i = 0; i < b.length; i++) a.array[i * 3] = b[i].x + Math.sin(t * 0.8 + b[i].ph + k) * 0.06; a.needsUpdate = true; } });
         if (md) grassTufts.forEach((g) => { g.rotation.z = Math.sin(t * 1.3 + g.userData.ph) * 0.07; });   // grass sways in the breeze
         // pollen / fireflies — drift up-and-sideways with a soft collective twinkle
-        { pollen.material.opacity = (md ? (0.5 + 0.5 * Math.sin(t * 0.7)) : 0.7) * 0.55 * richness * envFade; if (md) { const a = pollen.geometry.attributes.position, b = pollen.userData.base; for (let i = 0; i < b.length; i++) { a.array[i*3] = b[i].x + Math.sin(t * 0.25 + b[i].ph) * 0.5; a.array[i*3+1] = b[i].y + Math.sin(t * 0.4 + b[i].ph * 1.7) * 0.4; } a.needsUpdate = true; } }
+        { pollen.material.opacity = (md ? (0.5 + 0.5 * Math.sin(t * 0.7)) : 0.7) * 0.55 * richness * envFade; if (md) { const a = pollen.geometry.attributes.position, b = pollen.userData.base; for (let i = 0; i < b.length; i++) { a.array[i * 3] = b[i].x + Math.sin(t * 0.25 + b[i].ph) * 0.5; a.array[i * 3 + 1] = b[i].y + Math.sin(t * 0.4 + b[i].ph * 1.7) * 0.4; } a.needsUpdate = true; } }
         // critters (easter eggs): deer idle-bob, rabbit occasional hop, butterfly wander — all slow & subtle
         const critFade = envFade;
         deer.material.opacity = 0.85 * (0.4 + 0.6 * critFade); if (md) deer.position.y = deer.userData.by + Math.sin(t * 0.5) * 0.015;
         rabbit.material.opacity = 0.85 * (0.4 + 0.6 * critFade);
-        if (md) { const u = rabbit.userData;
+        if (md) {
+          const u = rabbit.userData;
           if (u.hopping) {                                   // JUMP → FLOAT → LAND arc over ~0.45s, advancing one step
             u.hopT += delta; const k = Math.min(1, u.hopT / 0.45);
             rabbit.position.y = u.by + Math.sin(k * Math.PI) * 0.2;
             rabbit.position.x = u.bx + u.hx + u.dir * 0.55 * k;
             rabbit.scale.y = 0.86 + 0.14 * Math.cos(k * Math.PI);   // squash on take-off/landing, stretched mid-air
-            if (k >= 1) { u.hx += u.dir * 0.55; u.hopping = false; u.hopT = 0; u.ht = 0; u.restT = 0.8 + Math.random() * 1.6;
+            if (k >= 1) {
+              u.hx += u.dir * 0.55; u.hopping = false; u.hopT = 0; u.ht = 0; u.restT = 0.8 + Math.random() * 1.6;
               if (u.hx > 1.5) u.dir = -1; else if (u.hx < -1.5) u.dir = 1; else if (Math.random() < 0.28) u.dir *= -1;  // turn at the edges of its patch / occasionally
-              rabbit.scale.x = Math.abs(rabbit.scale.x) * (u.dir > 0 ? 1 : -1); }                                       // face the way it hops
+              rabbit.scale.x = Math.abs(rabbit.scale.x) * (u.dir > 0 ? 1 : -1);
+            }                                       // face the way it hops
           } else {                                           // PAUSE: settle on the grass with a tiny idle ear/body twitch
             u.ht += delta; rabbit.position.y = u.by; rabbit.position.x = u.bx + u.hx; rabbit.scale.y = 1 + Math.sin(t * 3.2) * 0.03;
             if (u.ht > u.restT) { u.hopping = true; u.hopT = 0; }
@@ -1874,7 +2225,7 @@
         flame.material.opacity = 0.95 * critFade; if (md) { flame.scale.set(0.9 + 0.18 * Math.sin(t * 11), 0.92 + 0.12 * Math.abs(Math.sin(t * 7)), 1); flame.material.map = flame.userData.frames[(t * 8 | 0) % 3]; }
         campGlow.material.opacity = critFade * (md ? (0.3 + 0.1 * Math.sin(t * 6) + 0.06 * Math.sin(t * 13)) : 0.36);
         person.material.opacity = 0.92 * (0.4 + 0.6 * critFade); if (md) person.position.y = person.userData.by + Math.sin(t * 0.7) * 0.01;
-        smoke.material.opacity = 0.4 * critFade; if (md) { const a = smoke.geometry.attributes.position, b = smoke.userData.base; for (let i = 0; i < b.length; i++) { const rise = (t * 0.5 + b[i].ph) % 1.6; a.array[i*3] = b[i].x + Math.sin(t * 0.6 + b[i].ph) * (0.1 + rise * 0.25); a.array[i*3+1] = b[i].y + rise; } a.needsUpdate = true; }
+        smoke.material.opacity = 0.4 * critFade; if (md) { const a = smoke.geometry.attributes.position, b = smoke.userData.base; for (let i = 0; i < b.length; i++) { const rise = (t * 0.5 + b[i].ph) % 1.6; a.array[i * 3] = b[i].x + Math.sin(t * 0.6 + b[i].ph) * (0.1 + rise * 0.25); a.array[i * 3 + 1] = b[i].y + rise; } a.needsUpdate = true; }
         perched.forEach((bd, i) => { bd.material.opacity = 0.9 * (0.3 + 0.7 * critFade); if (md) bd.position.y = bd.userData.by + (Math.sin(t * 0.5 + i * 2) > 0.97 ? 0.05 : 0); });
         const birdOn = md;   // birds cross the sky in EVERY section (always visible)
         birds.forEach((g) => { g.visible = birdOn; if (!birdOn) return; const u = g.userData; u.t += delta; g.position.set(-34 + ((u.t * u.sp) % 64), u.yb + Math.sin(u.t * 0.6 + u.ph) * 1.1, u.z); const f = Math.sin(u.t * 8) * 0.5; u.w1.rotation.z = f; u.w2.rotation.z = -f; });
@@ -1982,9 +2333,9 @@
       _look.copy(_T).sub(_eye);
       ch.getWorldQuaternion(_q).invert(); _look.applyQuaternion(_q);   // into the head's parent (ch) frame
       const clampA = (v, m) => v < -m ? -m : v > m ? m : v;
-      const yawTarget   = clampA(Math.atan2(_look.x, _look.z), 0.85) * lookGate;   // ~49° safety cap
+      const yawTarget = clampA(Math.atan2(_look.x, _look.z), 0.85) * lookGate;   // ~49° safety cap
       const pitchTarget = clampA(Math.atan2(-_look.y, Math.hypot(_look.x, _look.z)), 0.5) * lookGate;
-      sm.lookYaw   += (yawTarget   - sm.lookYaw)   * damp(11);
+      sm.lookYaw += (yawTarget - sm.lookYaw) * damp(11);
       sm.lookPitch += (pitchTarget - sm.lookPitch) * damp(11);
       head.rotation.y = sm.lookYaw;
       head.rotation.x = sm.headX + sm.lookPitch;
@@ -2003,20 +2354,219 @@
   </script>
 
   <script>
+    // ── PROJECT MODAL ──
+    // Each project's copy is looked up through i18n keys (so the modal re-translates on
+    // language toggle) while images/links stay language-agnostic. Add a new project by
+    // adding an entry here, matching LANG keys, and a card with data-project="<key>".
+    const PROJECTS = {
+      mixturalatina: {
+        titleKey: 'proj1.title',
+        descKey: 'proj1.modalDesc',
+        tags: ['HTML', 'CSS', 'JavaScript'],
+        shots: 4,
+        shotImages: [
+          'assets/screenshots/mixturalatina-home.jpg',
+          'assets/screenshots/mixturalatina-menu.jpg',
+          'assets/screenshots/mixturalatina-about.jpg',
+          'assets/screenshots/mixturalatina-contact.jpg',
+        ],
+        links: [
+          { labelKey: 'link.viewSite', url: 'https://mixturalatina.at', icon: 'link' },
+        ],
+      },
+      portfolio: {
+        titleKey: 'proj2.title',
+        descKey: 'proj2.modalDesc',
+        toolsKey: 'proj2.tools',
+        vibecoded: true,
+        tags: ['Three.js', 'WebGL', 'JavaScript'],
+        shots: 0,
+        links: [
+          { labelKey: 'link.sourceCode', url: 'https://github.com/johannpatino/johannpatino.github.io', icon: 'github' },
+        ],
+      },
+      springboot: {
+        titleKey: 'proj3.title',
+        descKey: 'proj3.modalDesc',
+        whyKey: 'proj3.why',
+        learnedKey: 'proj3.learned',
+        tags: ['Java', 'Spring Boot', 'Spring Data JPA', 'PostgreSQL'],
+        shots: 2,
+        shotImages: [
+          'assets/screenshots/deliciousnessness-recipe-form.png',
+          'assets/screenshots/deliciousnessness-recipe-list.png',
+        ],
+        links: [
+          { labelKey: 'link.sourceCode', url: 'https://github.com/johannpatino/project-module-johannpatino', icon: 'github' },
+        ],
+      },
+    };
+
+    const ICONS = {
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+      github: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.7 18 5 18 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>',
+      doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+    };
+    const shotIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5.5-5.5L4 21"/></svg>';
+
+    const modalOverlay = document.getElementById('projectModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalTags = document.getElementById('modalTags');
+    const modalGallery = document.getElementById('modalGallery');
+    const modalGalleryLabel = document.getElementById('modalGalleryLabel');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalWhy = document.getElementById('modalWhy');
+    const modalWhyLabel = document.getElementById('modalWhyLabel');
+    const modalLearned = document.getElementById('modalLearned');
+    const modalLearnedLabel = document.getElementById('modalLearnedLabel');
+    const modalTools = document.getElementById('modalTools');
+    const modalToolsLabel = document.getElementById('modalToolsLabel');
+    const modalLinks = document.getElementById('modalLinks');
+    const modalClose = document.getElementById('modalClose');
+    let lastFocused = null;
+
+    function renderModal(key) {
+      const proj = PROJECTS[key];
+      if (!proj) return;
+      const dict = LANG[currentLang];
+      modalTitle.textContent = dict[proj.titleKey] || key;
+      modalDesc.textContent = dict[proj.descKey] || '';
+      const hasWhy = !!proj.whyKey;
+      modalWhy.style.display = hasWhy ? '' : 'none';
+      modalWhyLabel.style.display = hasWhy ? '' : 'none';
+      modalWhy.textContent = hasWhy ? (dict[proj.whyKey] || '') : '';
+      const hasLearned = !!proj.learnedKey;
+      modalLearned.style.display = hasLearned ? '' : 'none';
+      modalLearnedLabel.style.display = hasLearned ? '' : 'none';
+      modalLearned.textContent = hasLearned ? (dict[proj.learnedKey] || '') : '';
+      const hasTools = !!proj.toolsKey;
+      modalTools.style.display = hasTools ? '' : 'none';
+      modalToolsLabel.style.display = hasTools ? '' : 'none';
+      modalTools.textContent = hasTools ? (dict[proj.toolsKey] || '') : '';
+      const vibecodedTag = proj.vibecoded ? `<span class="tag tag--vibecoded">${dict['tag.vibecoded']}</span>` : '';
+      modalTags.innerHTML = vibecodedTag + proj.tags.map(t => `<span class="tag">${t}</span>`).join('');
+      const hasShots = proj.shots > 0;
+      modalGallery.style.display = hasShots ? '' : 'none';
+      modalGalleryLabel.style.display = hasShots ? '' : 'none';
+      const shotImages = proj.shotImages || [];
+      modalGallery.innerHTML = Array.from({ length: proj.shots }, (_, i) =>
+        shotImages[i]
+          ? `<div class="modal-shot modal-shot--img" role="button" tabindex="0" aria-label="${dict['modal.viewLarger'] || ''}"><img src="${shotImages[i]}" alt="${dict[proj.titleKey] || ''} — ${dict['modal.shotPlaceholder']} ${i + 1}" loading="lazy"></div>`
+          : `<div class="modal-shot">${shotIcon}<span>${dict['modal.shotPlaceholder']} ${i + 1}</span></div>`
+      ).join('');
+      modalLinks.innerHTML = proj.links.map(l =>
+        `<a class="modal-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${ICONS[l.icon] || ''}${dict[l.labelKey]}</a>`
+      ).join('');
+    }
+
+    function openModal(key) {
+      if (!PROJECTS[key]) return;
+      lastFocused = document.activeElement;
+      renderModal(key);
+      modalOverlay.classList.add('open');
+      modalOverlay.dataset.current = key;
+      document.body.style.overflow = 'hidden';
+      modalClose.focus();
+    }
+
+    function closeModal() {
+      if (!modalOverlay.classList.contains('open')) return;
+      modalOverlay.classList.remove('open');
+      delete modalOverlay.dataset.current;
+      document.body.style.overflow = '';
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    }
+
+    document.querySelectorAll('[data-project]').forEach(card => {
+      card.addEventListener('click', () => openModal(card.dataset.project));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(card.dataset.project); }
+      });
+    });
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    // ── LIGHTBOX ── click a real screenshot in the gallery to view it enlarged
+    const lightboxOverlay = document.getElementById('lightboxOverlay');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxClose = document.getElementById('lightboxClose');
+    let lightboxLastFocused = null;
+
+    function openLightbox(src, alt) {
+      lightboxLastFocused = document.activeElement;
+      lightboxImg.src = src;
+      lightboxImg.alt = alt || '';
+      lightboxOverlay.classList.add('open');
+      lightboxClose.focus();
+    }
+
+    function closeLightbox() {
+      if (!lightboxOverlay.classList.contains('open')) return;
+      lightboxOverlay.classList.remove('open');
+      if (lightboxLastFocused && lightboxLastFocused.focus) lightboxLastFocused.focus();
+    }
+
+    modalGallery.addEventListener('click', (e) => {
+      const shot = e.target.closest('.modal-shot--img');
+      if (!shot) return;
+      const img = shot.querySelector('img');
+      openLightbox(img.src, img.alt);
+    });
+    modalGallery.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const shot = e.target.closest('.modal-shot--img');
+      if (!shot) return;
+      e.preventDefault();
+      const img = shot.querySelector('img');
+      openLightbox(img.src, img.alt);
+    });
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxImg.addEventListener('click', closeLightbox);
+    lightboxOverlay.addEventListener('click', (e) => { if (e.target === lightboxOverlay) closeLightbox(); });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (lightboxOverlay.classList.contains('open')) { closeLightbox(); return; }
+      closeModal();
+    });
+  </script>
+
+  <script>
     // ── i18n ──
     const LANG = {
       en: {
         'hero.kicker': "Hello, I'm",
-        'hero.desc': 'Backend &amp; full-stack — Spring Boot, SQL, Docker. Based in Vienna, Austria.',
+        'hero.desc': 'Full-stack — JavaScript, React, Node.js, and Spring Boot/Java in training. Based in Vienna, Austria.',
         'hero.scroll': 'scroll ↓',
         'projects.title': 'Projects',
         'projects.sub': "// a few things I've built",
         'proj1.desc': 'Designed and built the frontend for a Vienna-based business — responsive, mobile-first, deployed and maintained in production.',
+        'proj1.title': 'MixturaLatina',
+        'proj1.modalDesc': "The website for MixturaLatina, a family-run Latin American restaurant in Vienna. Built the full frontend — home, menu, about and contact — with a distinct food-photography-forward look, an in-page menu with prices and allergen info, online ordering handed off to Wolt, a working contact form, and support for English, German and Spanish. Responsive and mobile-first from the start, since most visitors land on it from a phone. It's a live client site: I designed it, built it, deployed it, and I'm the one who updates it when the menu or hours change.",
         'proj2.desc': 'This interactive CV — a voxel character rendered in WebGL that responds to scroll and changes outfit for every section.',
-        'proj3.desc': 'A backend service with a layered architecture, JPA persistence and containerized deployment.',
+        'proj2.title': '8-Bit Portfolio',
+        'proj2.modalDesc': 'This site itself: an interactive CV built with Three.js. A voxel character walks, turns, and changes outfit as you scroll through each section, set against a hand-composed 8-bit landscape with day-cycle lighting, wildlife and a campfire scene. Built from scratch with plain JavaScript and WebGL — no framework, no build step.',
+        'proj2.tools': "Built largely by vibecoding with Claude Code, Anthropic's AI coding agent, rather than typed out solo line by line. I directed it conversationally — describing the scene, the character rig, the scroll-driven animation states, the outfit changes per section, the day-cycle lighting — and iterated through many rounds of feedback and screenshots until it looked and felt right. I reviewed and understood the code it produced rather than blindly accepting it, and did plenty of hands-on tweaking myself, but I want to be upfront that this was a human+AI collaboration, not something I hand-wrote entirely on my own.",
+        'proj3.desc': 'A multilingual recipe management REST API with full CRUD and search/filter, built with a layered architecture and JPA persistence.',
+        'proj3.title': 'Deliciousnessness',
+        'proj3.modalDesc': 'A REST API for managing recipes, built with Spring Boot during the everyonecodes program. Supports full CRUD plus search and filtering by ingredient, category and season. Layered into controller / service / repository, with Spring Data JPA persisting to PostgreSQL, DTOs and a mapper to keep the API shape separate from the data model, and integration + unit tests covering the controller and service layers.',
+        'proj3.why': "My partner is multilingual and passionate about cooking, with recipes scattered across different languages and pulled from all kinds of services and websites. I wanted to build her something that could hold all of it in one place — add, edit and organize her recipes, and search through them by ingredient no matter which language she typed it in. Making that search language-agnostic shaped the whole data model underneath.",
+        'proj3.learned': "This was my first real project with Spring Boot, Java and SQL beyond isolated exercises, and it forced me to actually understand the layers instead of copying a tutorial: how a request moves from controller to service to repository, what an ORM is doing to turn Java objects into rows in a relational database, and why the two don't always map cleanly onto each other. I picked up the reasoning behind relationships and constraints in SQL, how transactions keep a group of operations consistent, and how to structure a Spring Boot application so each layer has one job. I also wrote my first real tests for it, which pushed me to think about correctness beyond just checking Postman responses by eye.",
+        'card.hint': '// click for details →',
+        'tag.vibecoded': 'Vibecoded',
+        'modal.about': '// about this project',
+        'modal.why': '// why this project',
+        'modal.learned': '// what I learned',
+        'modal.tools': '// tools &amp; process',
+        'modal.screenshots': '// screenshots',
+        'modal.shotPlaceholder': 'Screenshot',
+        'modal.viewLarger': 'View screenshot larger',
+        'link.viewSite': 'View site',
+        'link.sourceCode': 'Source code',
+        'link.readme': 'Read the docs',
         'cv.title': 'About Me',
         'cv.sub': '// background &amp; experience',
-        'cv.summary': '<strong>Software Developer</strong> focused on Java backend and web development. Currently training at <strong>everyonecodes Wien</strong>, with a completed full-stack bootcamp and real-world experience — including a live client website. Eager to keep growing as a software engineer.',
+        'cv.summary': '<strong>Full-Stack Software Developer</strong> with a completed full-stack bootcamp (JavaScript, React, Node.js) and real-world experience — including a live client website. Currently deepening backend skills at <strong>everyonecodes Wien</strong> with Java and Spring Boot. Eager to keep growing as a software engineer.',
         'cv.edu': '// education',
         'edu1.date': '12/2025 — present',
         'edu1.desc': 'Java, OOP, Spring Boot, Spring Data, Spring Security, SQL, Docker',
@@ -2039,20 +2589,41 @@
         'exp4.desc': 'À la carte service, customer advice, kitchen &amp; workplace hygiene.',
         'contact.title': 'Contact',
         'contact.sub': "// let's build something together",
-        'contact.whoami': 'Johann Patiño · Java Developer · Vienna, AT',
+        'contact.whoami': 'Johann Patiño · Full-Stack Developer · Vienna, AT',
       },
       de: {
         'hero.kicker': 'Hallo, ich bin',
-        'hero.desc': 'Backend &amp; Full-Stack — Spring Boot, SQL, Docker. Wohnhaft in Wien, Österreich.',
+        'hero.desc': 'Full-Stack — JavaScript, React, Node.js und Spring Boot/Java in Ausbildung. Wohnhaft in Wien, Österreich.',
         'hero.scroll': 'scrollen ↓',
         'projects.title': 'Projekte',
         'projects.sub': '// ein paar Dinge, die ich gebaut habe',
         'proj1.desc': 'Frontend für ein Wiener Unternehmen entworfen und umgesetzt — responsiv, mobile-first, deployed und gewartet.',
+        'proj1.title': 'MixturaLatina',
+        'proj1.modalDesc': 'Die Website von MixturaLatina, einem familiengeführten lateinamerikanischen Restaurant in Wien. Das komplette Frontend gebaut — Home, Menu, About und Contact — mit einem Look, der stark auf Food-Fotografie setzt, einer Speisekarte direkt auf der Seite mit Preisen und Allergen-Hinweisen, Online-Bestellung über Wolt, einem funktionierenden Kontaktformular und Unterstützung für Englisch, Deutsch und Spanisch. Von Anfang an responsiv und mobile-first, da die meisten Besucher über das Handy einsteigen. Es ist eine echte Kunden-Website: Ich habe sie entworfen, gebaut, deployed, und ich bin auch derjenige, der sie aktualisiert, wenn sich Speisekarte oder Öffnungszeiten ändern.',
         'proj2.desc': 'Dieses interaktive Portfolio — ein Voxel-Charakter in WebGL, der auf Scrollen reagiert und für jeden Abschnitt das Outfit wechselt.',
-        'proj3.desc': 'Ein Backend-Service mit Schichtenarchitektur, JPA-Persistenz und containerisiertem Deployment.',
+        'proj2.title': '8-Bit Portfolio',
+        'proj2.modalDesc': 'Diese Website selbst: ein interaktiver Lebenslauf mit Three.js. Ein Voxel-Charakter geht, dreht sich und wechselt beim Scrollen durch die Abschnitte das Outfit — vor einer handkomponierten 8-Bit-Landschaft mit Tageslichtstimmung, Tieren und einer Lagerfeuerszene. Von Grund auf mit reinem JavaScript und WebGL gebaut — ohne Framework, ohne Build-Schritt.',
+        'proj2.tools': 'Größtenteils per Vibecoding mit Claude Code entstanden, dem KI-Coding-Agenten von Anthropic, statt Zeile für Zeile von Hand getippt. Ich habe konversationell die Richtung vorgegeben — die Szene, das Charakter-Rig, die scrollgesteuerten Animationszustände, die Outfit-Wechsel pro Abschnitt, die Tageslichtstimmung beschrieben — und über viele Runden mit Feedback und Screenshots iteriert, bis es passte. Ich habe den entstandenen Code geprüft und verstanden statt ihn blind zu übernehmen, und selbst noch einiges von Hand nachjustiert, aber ich möchte offen sagen: Das war eine Zusammenarbeit zwischen Mensch und KI, nicht etwas, das ich komplett allein geschrieben habe.',
+        'proj3.desc': 'Eine mehrsprachige REST-API zur Rezeptverwaltung mit vollständigem CRUD und Such-/Filterfunktion, aufgebaut mit Schichtenarchitektur und JPA-Persistenz.',
+        'proj3.title': 'Deliciousnessness',
+        'proj3.modalDesc': 'Eine REST-API zur Verwaltung von Rezepten, gebaut mit Spring Boot im Rahmen des everyonecodes-Programms. Unterstützt vollständiges CRUD sowie Suche und Filterung nach Zutat, Kategorie und Saison. Aufgeteilt in Controller / Service / Repository, mit Spring Data JPA und Persistenz in PostgreSQL, DTOs und einem Mapper zur Trennung von API-Form und Datenmodell, sowie Integrations- und Unit-Tests für Controller und Service.',
+        'proj3.why': 'Meine Partnerin ist mehrsprachig und leidenschaftliche Köchin, mit Rezepten verstreut über verschiedene Sprachen und zusammengetragen aus allen möglichen Diensten und Websites. Ich wollte ihr etwas bauen, das das alles an einem Ort sammelt — Rezepte hinzufügen, bearbeiten und organisieren, und nach Zutat durchsuchbar, egal in welcher Sprache sie sucht. Genau diese sprachunabhängige Suche hat das gesamte darunterliegende Datenmodell geprägt.',
+        'proj3.learned': 'Das war mein erstes echtes Projekt mit Spring Boot, Java und SQL über isolierte Übungen hinaus, und es hat mich gezwungen, die Schichten wirklich zu verstehen statt nur ein Tutorial nachzubauen: wie ein Request vom Controller über den Service zum Repository wandert, was ein ORM eigentlich tut, um Java-Objekte in Zeilen einer relationalen Datenbank zu verwandeln, und warum sich beides nicht immer sauber deckt. Ich habe die Logik hinter Beziehungen und Constraints in SQL mitgenommen, wie Transactions eine Gruppe von Operationen konsistent halten, und wie man eine Spring-Boot-Anwendung so strukturiert, dass jede Schicht genau eine Aufgabe hat. Ich habe dafür außerdem meine ersten echten Tests geschrieben, was mich dazu gebracht hat, über Korrektheit nachzudenken statt Postman-Antworten nur mit dem Auge zu prüfen.',
+        'card.hint': '// für Details klicken →',
+        'tag.vibecoded': 'Vibecoded',
+        'modal.about': '// über dieses Projekt',
+        'modal.why': '// warum dieses Projekt',
+        'modal.learned': '// was ich gelernt habe',
+        'modal.tools': '// tools &amp; vorgehen',
+        'modal.screenshots': '// screenshots',
+        'modal.shotPlaceholder': 'Screenshot',
+        'modal.viewLarger': 'Screenshot vergrößern',
+        'link.viewSite': 'Seite ansehen',
+        'link.sourceCode': 'Quellcode',
+        'link.readme': 'Dokumentation',
         'cv.title': 'Über mich',
         'cv.sub': '// Hintergrund &amp; Erfahrung',
-        'cv.summary': '<strong>Software Developer</strong> mit Schwerpunkt auf Java-Backend und Webentwicklung. Aktuell in Ausbildung bei <strong>everyonecodes Wien</strong>, mit abgeschlossenem Full-Stack-Bootcamp und erster Projekterfahrung — darunter eine reale Kundenwebsite. Motiviert, in der Softwareentwicklung kontinuierlich zu wachsen.',
+        'cv.summary': '<strong>Full-Stack Software Developer</strong> mit abgeschlossenem Full-Stack-Bootcamp (JavaScript, React, Node.js) und erster Projekterfahrung — darunter eine reale Kundenwebsite. Aktuell vertieft er seine Backend-Kenntnisse bei <strong>everyonecodes Wien</strong> mit Java und Spring Boot. Motiviert, in der Softwareentwicklung kontinuierlich zu wachsen.',
         'cv.edu': '// Ausbildung',
         'edu1.date': '12/2025 — heute',
         'edu1.desc': 'Java, OOP, Spring Boot, Spring Data, Spring Security, SQL, Docker',
@@ -2075,12 +2646,12 @@
         'exp4.desc': 'Service à la carte, Kundenberatung, Küchen- &amp; Arbeitsplatzhygiene.',
         'contact.title': 'Kontakt',
         'contact.sub': '// Lass uns zusammen etwas aufbauen',
-        'contact.whoami': 'Johann Patiño · Java Developer · Wien, AT',
+        'contact.whoami': 'Johann Patiño · Full-Stack Developer · Wien, AT',
       }
     };
 
     // Page <title> per language — kept here so the browser tab follows the toggle too.
-    const TITLE = { en: 'Johann Patiño — Java Developer', de: 'Johann Patiño — Java-Entwickler' };
+    const TITLE = { en: 'Johann Patiño — Full-Stack Developer', de: 'Johann Patiño — Full-Stack-Entwickler' };
 
     const langBtn = document.getElementById('langBtn');
     let currentLang = 'en';
@@ -2095,11 +2666,23 @@
         const val = dict[el.dataset.i18n];
         if (val !== undefined) el.innerHTML = val;
       });
+      // keep an open project modal in sync with the newly-selected language
+      if (typeof modalOverlay !== 'undefined' && modalOverlay.classList.contains('open')) {
+        renderModal(modalOverlay.dataset.current);
+      }
+      try { localStorage.setItem('lang', lang); } catch (e) { /* storage unavailable (private mode, etc.) */ }
     }
     function toggleLang() {
       applyLang(currentLang === 'en' ? 'de' : 'en');
     }
+    // restore a remembered language choice, falling back to the browser's language on first visit
+    let initialLang = 'en';
+    try { initialLang = localStorage.getItem('lang'); } catch (e) { /* storage unavailable */ }
+    if (initialLang !== 'en' && initialLang !== 'de') {
+      initialLang = navigator.language && navigator.language.toLowerCase().startsWith('de') ? 'de' : 'en';
+    }
+    applyLang(initialLang);
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0ed4c8c6d8e70bf',t:'MTc4MTk4NDk5MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 
 </html>
